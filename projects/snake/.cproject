@@ -44,6 +44,7 @@
 									<listOptionValue builtIn="false" value="../../../CMSIS/Include"/>
 									<listOptionValue builtIn="false" value="../../../CMSIS/Device/ST/STM32F1xx/Include"/>
 									<listOptionValue builtIn="false" value="../../../drivers/gpio"/>
+									<listOptionValue builtIn="false" value="../../../drivers/spi"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.986287702" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -74,6 +75,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers/gpio"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers/spi"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
