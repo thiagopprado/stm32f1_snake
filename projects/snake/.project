@@ -34,5 +34,10 @@
 			<type>2</type>
 			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/CMSIS</locationURI>
 		</link>
+		<link>
+			<name>drivers</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/drivers</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>
