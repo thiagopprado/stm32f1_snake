@@ -6,7 +6,7 @@
 #include "gpio.h"
 
 void spi_setup(spi_bus_t spi) {
-	RCC->APB2ENR |= RCC_APB2ENR_AFIOEN; // Enable Alternate Function
+    RCC->APB2ENR |= RCC_APB2ENR_AFIOEN; // Enable Alternate Function
 
     if (spi == SPI_BUS_1) {
         RCC->APB2ENR |= RCC_APB2ENR_SPI1EN; // Enable SPI1
@@ -31,7 +31,7 @@ void spi_setup(spi_bus_t spi) {
 }
 
 void spi_trx(spi_bus_t spi, uint8_t* buffer, uint16_t trx_size) {
-	uint16_t write_idx = 0, read_idx = 0;
+    uint16_t write_idx = 0, read_idx = 0;
 
     if (spi == SPI_BUS_1) {
         while (write_idx < trx_size || read_idx < trx_size) {

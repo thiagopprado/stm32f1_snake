@@ -11,8 +11,8 @@ typedef enum {
 } snake_dir_t;
 
 typedef struct {
-	uint8_t x;
-	uint8_t y;
+    uint8_t x;
+    uint8_t y;
 } snake_pos_t;
 
 typedef enum {

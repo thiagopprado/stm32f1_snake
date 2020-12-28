@@ -149,77 +149,77 @@ uint8_t screen_buffer[NOKIA5110_BYTES_NR] = {
  * PORTA4 Chip Select
  */
 void nokia5110_setup(void) {
-	uint8_t buffer[4] = {0};
+    uint8_t buffer[4] = {0};
 
-	gpio_setup(GPIO_PORTA, 0, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // DC
-	gpio_setup(GPIO_PORTA, 1, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // RST
-	gpio_setup(GPIO_PORTA, 4, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // CS
+    gpio_setup(GPIO_PORTA, 0, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // DC
+    gpio_setup(GPIO_PORTA, 1, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // RST
+    gpio_setup(GPIO_PORTA, 4, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // CS
 
-	gpio_clr(GPIOA, 0); // Clear DC
-	gpio_set(GPIOA, 1); // Set RST
-	gpio_set(GPIOA, 4); // Set Chip Select
+    gpio_clr(GPIOA, 0); // Clear DC
+    gpio_set(GPIOA, 1); // Set RST
+    gpio_set(GPIOA, 4); // Set Chip Select
 
     // Reset Pulse
-	gpio_clr(GPIOA, 1); // Clr RST
-	nokia5110_delay_ms(10);
-	gpio_set(GPIOA, 1); // Set RST
+    gpio_clr(GPIOA, 1); // Clr RST
+    nokia5110_delay_ms(10);
+    gpio_set(GPIOA, 1); // Set RST
 
     // LCD setup
-	gpio_clr(GPIOA, 0); // DC = 0 --> Command
-	buffer[0] = 0x21;
-	buffer[1] = 0x90;
-	buffer[2] = 0x20;
-	buffer[3] = 0x0C;
-	gpio_clr(GPIOA, 4); // Clear CS
-	spi_trx(SPI_BUS_1, buffer, 4);
-	gpio_set(GPIOA, 4); // Set CS
+    gpio_clr(GPIOA, 0); // DC = 0 --> Command
+    buffer[0] = 0x21;
+    buffer[1] = 0x90;
+    buffer[2] = 0x20;
+    buffer[3] = 0x0C;
+    gpio_clr(GPIOA, 4); // Clear CS
+    spi_trx(SPI_BUS_1, buffer, 4);
+    gpio_set(GPIOA, 4); // Set CS
 
     nokia5110_clear_screen();
-	nokia5110_move_cursor(0, 0);
+    nokia5110_move_cursor(0, 0);
 }
 
 void nokia5110_move_cursor(uint8_t x, uint8_t y) {
-	uint8_t buffer[3] = {0};
+    uint8_t buffer[3] = {0};
 
     // Updates display position to copy the sent chars on screen buffer
     display_pos = x + y * NOKIA5110_MAX_COL_NR;
 
-	gpio_clr(GPIOA, 0); // DC = 0 --> Command
-	buffer[0] = 0x20;
-	buffer[1] = 0x40 | y; // Linha
-	buffer[2] = 0x80 | x; // Coluna
-	gpio_clr(GPIOA, 4); // Clear CS
-	spi_trx(SPI_BUS_1, buffer, 3);
-	gpio_set(GPIOA, 4); // Set CS
+    gpio_clr(GPIOA, 0); // DC = 0 --> Command
+    buffer[0] = 0x20;
+    buffer[1] = 0x40 | y; // Linha
+    buffer[2] = 0x80 | x; // Coluna
+    gpio_clr(GPIOA, 4); // Clear CS
+    spi_trx(SPI_BUS_1, buffer, 3);
+    gpio_set(GPIOA, 4); // Set CS
 }
 
 void nokia5110_clear_screen(void) {
-	uint16_t i = 0;
-	uint8_t buffer = 0;
+    uint16_t i = 0;
+    uint8_t buffer = 0;
 
     // Limpa a tela
-	gpio_set(GPIOA, 0); // DC = 1 --> Data
-	gpio_clr(GPIOA, 4); // Clear CS
-	for (i = 0; i < NOKIA5110_BYTES_NR; i++) {
-		buffer = 0;
-		spi_trx(SPI_BUS_1, &buffer, 1);
-	}
-	gpio_set(GPIOA, 4); // Set CS
+    gpio_set(GPIOA, 0); // DC = 1 --> Data
+    gpio_clr(GPIOA, 4); // Clear CS
+    for (i = 0; i < NOKIA5110_BYTES_NR; i++) {
+        buffer = 0;
+        spi_trx(SPI_BUS_1, &buffer, 1);
+    }
+    gpio_set(GPIOA, 4); // Set CS
 }
 
 void nokia5110_char(char character) {
     // Adds 1 blank collumn after the char
-	uint8_t buffer[NOKIA5110_COL_PER_CHAR + 1] = {0};
+    uint8_t buffer[NOKIA5110_COL_PER_CHAR + 1] = {0};
     uint8_t i = 0;
 
-	gpio_set(GPIOA, 0); // DC = 1 --> Data
+    gpio_set(GPIOA, 0); // DC = 1 --> Data
     for (i = 0; i < NOKIA5110_COL_PER_CHAR; i++) {
         buffer[i] = characters[character - 0x20][i];
         screen_buffer[display_pos++] = buffer[i];
     }
-	gpio_clr(GPIOA, 4); // Clear CS
-	spi_trx(SPI_BUS_1, buffer, NOKIA5110_COL_PER_CHAR + 1);
-	gpio_set(GPIOA, 4); // Set CS
+    gpio_clr(GPIOA, 4); // Clear CS
+    spi_trx(SPI_BUS_1, buffer, NOKIA5110_COL_PER_CHAR + 1);
+    gpio_set(GPIOA, 4); // Set CS
 
     // Keeps count of the added blank collumn
     screen_buffer[display_pos++] = 0;
@@ -250,13 +250,13 @@ void nokia5110_update_screen(void) {
 
     nokia5110_move_cursor(0, 0);
     
-	gpio_set(GPIOA, 0); // DC = 1 --> Data
-	gpio_clr(GPIOA, 4); // Clear CS
+    gpio_set(GPIOA, 0); // DC = 1 --> Data
+    gpio_clr(GPIOA, 4); // Clear CS
     for (i = 0; i < NOKIA5110_BYTES_NR; i++) {
         buffer = screen_buffer[i];
         spi_trx(SPI_BUS_1, &buffer, 1);
     }
-	gpio_set(GPIOA, 4); // Set CS
+    gpio_set(GPIOA, 4); // Set CS
 }
 
 void nokia5110_clear_buffer(void) {
@@ -318,9 +318,9 @@ void nokia5110_clear_rectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
 }
 
 void nokia5110_delay_ms(uint32_t millis) {
-	volatile uint32_t a = 0;
+    volatile uint32_t a = 0;
 
-	for (; millis > 0; millis--) {
-		for	(a = 0; a < 800; a++);
-	}
+    for (; millis > 0; millis--) {
+        for	(a = 0; a < 800; a++);
+    }
 }

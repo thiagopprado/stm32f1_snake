@@ -50,24 +50,24 @@ void snake_draw_food(void);
  *  Parametros = x de 0 a 20, y de 0 a 11
  */
 void snake_init(void) {
-	uint8_t i = 0;
+    uint8_t i = 0;
 
     // Cfg keyboard
     gpio_setup(GPIO_PORTB, 12, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Right
-	gpio_write(GPIO_PORTB, 12, GPIO_STATE_HIGH); // Pull up
+    gpio_write(GPIO_PORTB, 12, GPIO_STATE_HIGH); // Pull up
 
-	gpio_setup(GPIO_PORTB, 13, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Down
-	gpio_write(GPIO_PORTB, 13, GPIO_STATE_HIGH); // Pull up
+    gpio_setup(GPIO_PORTB, 13, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Down
+    gpio_write(GPIO_PORTB, 13, GPIO_STATE_HIGH); // Pull up
 
-	gpio_setup(GPIO_PORTB, 14, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Left
-	gpio_write(GPIO_PORTB, 14, GPIO_STATE_HIGH); // Pull up
+    gpio_setup(GPIO_PORTB, 14, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Left
+    gpio_write(GPIO_PORTB, 14, GPIO_STATE_HIGH); // Pull up
 
-	gpio_setup(GPIO_PORTB, 15, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Up
-	gpio_write(GPIO_PORTB, 15, GPIO_STATE_HIGH); // Pull up
+    gpio_setup(GPIO_PORTB, 15, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Up
+    gpio_write(GPIO_PORTB, 15, GPIO_STATE_HIGH); // Pull up
 
-	nokia5110_clear_buffer();
-	nokia5110_draw_rectangle(SNAKE_RECT_X1, SNAKE_RECT_Y1, SNAKE_RECT_X2, SNAKE_RECT_Y2);
-	
+    nokia5110_clear_buffer();
+    nokia5110_draw_rectangle(SNAKE_RECT_X1, SNAKE_RECT_Y1, SNAKE_RECT_X2, SNAKE_RECT_Y2);
+    
     // Initial position
     snake[0].x = 2;
     snake[0].y = 0;
@@ -88,15 +88,15 @@ void snake_init(void) {
     head = 0;
 
     // Draw init snake and food
-	for (i = 0; i < size; i++) {
-		snake_draw_part(snake[i]);
-	}
+    for (i = 0; i < size; i++) {
+        snake_draw_part(snake[i]);
+    }
     snake_draw_food();
 }
 
 void snake_update(void) {
-	uint16_t tail = head + size - 1;
-	uint8_t new_head = head - 1;
+    uint16_t tail = head + size - 1;
+    uint8_t new_head = head - 1;
 
     // If game over, waits for input to reset
     if (game_state == SNAKE_STATE_GAME_OVER) {
@@ -106,14 +106,14 @@ void snake_update(void) {
         return;
     }
 
-	if (head == 0) {
+    if (head == 0) {
         // Last array position (circular buffer)
-		new_head = SNAKE_MAX_SIZE - 1;
-	}
+        new_head = SNAKE_MAX_SIZE - 1;
+    }
 
-	if (tail >= SNAKE_MAX_SIZE) {
-		tail -= SNAKE_MAX_SIZE;
-	}
+    if (tail >= SNAKE_MAX_SIZE) {
+        tail -= SNAKE_MAX_SIZE;
+    }
 
     last_direction = direction;
 
@@ -147,28 +147,28 @@ void snake_update(void) {
     // Calculates the new head
     switch (direction) {
         case SNAKE_DIR_RIGHT:
-	        snake[new_head].y = snake[head].y;
+            snake[new_head].y = snake[head].y;
             snake[new_head].x = snake[head].x + 1;
             if (snake[new_head].x == SNAKE_MAX_X) {
                 snake[new_head].x = 0;
             }
         break;
         case SNAKE_DIR_DOWN:
-	        snake[new_head].x = snake[head].x;
+            snake[new_head].x = snake[head].x;
             snake[new_head].y = snake[head].y + 1;
             if (snake[new_head].y == SNAKE_MAX_Y) {
                 snake[new_head].y = 0;
             }
         break;
         case SNAKE_DIR_LEFT:
-	        snake[new_head].y = snake[head].y;
+            snake[new_head].y = snake[head].y;
             snake[new_head].x = snake[head].x - 1;
             if (snake[head].x == 0) {
                 snake[new_head].x = SNAKE_MAX_X - 1;
             }
         break;
         case SNAKE_DIR_UP:
-	        snake[new_head].x = snake[head].x;
+            snake[new_head].x = snake[head].x;
             snake[new_head].y = snake[head].y - 1;
             if (snake[head].y == 0) {
                 snake[new_head].y = SNAKE_MAX_Y - 1;
@@ -179,19 +179,19 @@ void snake_update(void) {
     // Checks collision
     if (snake_check_collision(snake[new_head]) == SNAKE_COLLISION_TRUE) {
         // New head hitted a snake part
-    	nokia5110_string_at(" Game Over! ", 6, 2);
-    	nokia5110_string_at(" Score:     ", 6, 3);
-    	nokia5110_char_at('0' + (size / 100), 52, 3);
-    	nokia5110_char('0' + ((size / 10) % 10));
-    	nokia5110_char('0' + (size % 10));
+        nokia5110_string_at(" Game Over! ", 6, 2);
+        nokia5110_string_at(" Score:     ", 6, 3);
+        nokia5110_char_at('0' + (size / 100), 52, 3);
+        nokia5110_char('0' + ((size / 10) % 10));
+        nokia5110_char('0' + (size % 10));
         game_state = SNAKE_STATE_GAME_OVER;
         key_pressed = SNAKE_KEY_NONE;
         return;
     }
 
-	// Prints new head
-	head = new_head;
-	snake_draw_part(snake[head]);
+    // Prints new head
+    head = new_head;
+    snake_draw_part(snake[head]);
 
     // Checks if new head reached the food
     if ((snake[new_head].x == food.x) &&
@@ -265,10 +265,10 @@ snake_collision_t snake_check_collision(snake_pos_t position) {
 }
 
 void snake_draw_food(void) {
-	uint8_t x, y;
+    uint8_t x, y;
 
     x = SNAKE_X_0 + SNAKE_PART_SIZE * food.x;
-	y = SNAKE_Y_0 + SNAKE_PART_SIZE * food.y;
+    y = SNAKE_Y_0 + SNAKE_PART_SIZE * food.y;
 
     nokia5110_set_pixel(x + 1, y + 1);
     nokia5110_set_pixel(x + 2, y + 2);
@@ -277,16 +277,16 @@ void snake_draw_food(void) {
 }
 
 void snake_draw_part(snake_pos_t part_coord) {
-	uint8_t i, j, x, y;
+    uint8_t i, j, x, y;
 
-	x = SNAKE_X_0 + SNAKE_PART_SIZE * part_coord.x;
-	y = SNAKE_Y_0 + SNAKE_PART_SIZE * part_coord.y;
+    x = SNAKE_X_0 + SNAKE_PART_SIZE * part_coord.x;
+    y = SNAKE_Y_0 + SNAKE_PART_SIZE * part_coord.y;
 
-	for (i = 0; i < SNAKE_PART_SIZE; i++) {
-		for (j = 0; j < SNAKE_PART_SIZE; j++) {
-			nokia5110_set_pixel(x + i, y + j);
-		}
-	}
+    for (i = 0; i < SNAKE_PART_SIZE; i++) {
+        for (j = 0; j < SNAKE_PART_SIZE; j++) {
+            nokia5110_set_pixel(x + i, y + j);
+        }
+    }
     return;
 
     // Personalizes the part according to directions
@@ -310,7 +310,7 @@ void snake_draw_part(snake_pos_t part_coord) {
         }
 
         x = SNAKE_X_0 + SNAKE_PART_SIZE * snake[last_head].x;
-	    y = SNAKE_Y_0 + SNAKE_PART_SIZE * snake[last_head].y;
+        y = SNAKE_Y_0 + SNAKE_PART_SIZE * snake[last_head].y;
 
         if (last_direction == SNAKE_DIR_UP && direction == SNAKE_DIR_RIGHT) {
             for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
@@ -347,14 +347,14 @@ void snake_draw_part(snake_pos_t part_coord) {
 }
 
 void snake_erase_part(snake_pos_t part_coord) {
-	uint8_t i, j, x, y;
+    uint8_t i, j, x, y;
 
-	x = SNAKE_X_0 + SNAKE_PART_SIZE * part_coord.x;
-	y = SNAKE_Y_0 + SNAKE_PART_SIZE * part_coord.y;
+    x = SNAKE_X_0 + SNAKE_PART_SIZE * part_coord.x;
+    y = SNAKE_Y_0 + SNAKE_PART_SIZE * part_coord.y;
 
-	for (i = 0; i < SNAKE_PART_SIZE; i++) {
-		for (j = 0; j < SNAKE_PART_SIZE; j++) {
-			nokia5110_clr_pixel(x + i, y + j);
-		}
-	}
+    for (i = 0; i < SNAKE_PART_SIZE; i++) {
+        for (j = 0; j < SNAKE_PART_SIZE; j++) {
+            nokia5110_clr_pixel(x + i, y + j);
+        }
+    }
 }
