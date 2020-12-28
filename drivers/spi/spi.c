@@ -1,3 +1,11 @@
+/**
+ * Author: thiagopereiraprado@gmail.com
+ * 
+ * @file
+ * @ingroup spi
+ * @brief STM32F1 SPI driver
+ * 
+ */
 #include "spi.h"
 
 #include <stddef.h>
@@ -5,14 +13,28 @@
 
 #include "gpio.h"
 
+/**
+ * @ingroup spi
+ * @brief Sets up the SPI bus.
+ *
+ * @param spi   SPI bus to set up.
+ *
+ * @note The chip select pin must be set up and handled outside
+ * the driver.
+ */
 void spi_setup(spi_bus_t spi) {
-    RCC->APB2ENR |= RCC_APB2ENR_AFIOEN; // Enable Alternate Function
+    // Enable Alternate Function
+    RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
 
     if (spi == SPI_BUS_1) {
-        RCC->APB2ENR |= RCC_APB2ENR_SPI1EN; // Enable SPI1
+        // Enable SPI1
+        RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
 
+        // PORTA5 = SCLK1
         gpio_setup(GPIO_PORTA, 5, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_AF_PUSH_PULL);
+        // PORTA6 = MISO1
         gpio_setup(GPIO_PORTA, 6, GPIO_MODE_INPUT, GPIO_CFG_IN_FLOAT);
+        // PORTA7 = MOSI1
         gpio_setup(GPIO_PORTA, 7, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_AF_PUSH_PULL);
 
         /**
@@ -24,12 +46,21 @@ void spi_setup(spi_bus_t spi) {
          *  Software slave management --> NSS = 1
          */
         SPI1->CR1 = (2 << SPI_CR1_BR_Pos) | SPI_CR1_MSTR | SPI_CR1_SSI | SPI_CR1_SSM;
-        SPI1->CR1 |= SPI_CR1_SPE; // SPI Enable
+        // SPI Enable
+        SPI1->CR1 |= SPI_CR1_SPE;
     } else {
         // Not implemented yet!
     }
 }
 
+/**
+ * @ingroup spi
+ * @brief Starts a SPI transmission.
+ *
+ * @param spi       SPI bus.
+ * @param buffer    Pointer to the buffer with the message to send (will be overwriten with the read message).
+ * @param trx_size  Transmission's size.
+ */
 void spi_trx(spi_bus_t spi, uint8_t* buffer, uint16_t trx_size) {
     uint16_t write_idx = 0, read_idx = 0;
 

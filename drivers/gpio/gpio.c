@@ -2,8 +2,8 @@
  * Author: thiagopereiraprado@gmail.com
  * 
  * @file
- * @defgroup gpio STM32F1 GPIO driver
- * @brief STM32F1 GPIO driver
+ * @ingroup gpio STM32F1
+ * @brief STM32F1 GPIO driver implementation
  * 
  */
 #include "gpio.h"

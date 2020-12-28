@@ -1,3 +1,11 @@
+/**
+ * Author: thiagopereiraprado@gmail.com
+ * 
+ * @file
+ * @defgroup gpio STM32F1 GPIO driver
+ * @brief STM32F1 GPIO driver
+ * 
+ */
 #ifndef GPIO_H
 #define GPIO_H
 
