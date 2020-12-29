@@ -1,3 +1,11 @@
+/**
+ * Author: thiagopereiraprado@gmail.com
+ * 
+ * @file
+ * @defgroup nokia5110 Nokia 5110 display driver
+ * @brief Nokia 5110 display driver
+ * 
+ */
 #ifndef NOKIA5110_H
 #define NOKIA5110_H
 
@@ -18,7 +26,6 @@ void nokia5110_update_screen(void);
 void nokia5110_clear_buffer(void);
 void nokia5110_set_pixel(uint8_t x, uint8_t y);
 void nokia5110_clr_pixel(uint8_t x, uint8_t y);
-
 void nokia5110_draw_rectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 void nokia5110_clear_rectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 

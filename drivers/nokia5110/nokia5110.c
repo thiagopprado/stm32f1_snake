@@ -1,3 +1,11 @@
+/**
+ * Author: thiagopereiraprado@gmail.com
+ * 
+ * @file
+ * @ingroup nokia5110
+ * @brief Nokia 5110 display driver implementation
+ * 
+ */
 #include "nokia5110.h"
 
 #include "spi.h"
@@ -5,10 +13,10 @@
 
 #define NOKIA5110_COL_PER_CHAR  5
 
-void nokia5110_delay_ms(uint32_t millis);
-
+// Last written position
 uint16_t display_pos = 0;
 
+// ASCII characters array mapped to display pixels
 const uint8_t characters[][NOKIA5110_COL_PER_CHAR] = {
     // First 32 characters (0x00-0x19) are ignored. These are non-displayable, control characters.
     {0x00, 0x00, 0x00, 0x00, 0x00},  // 0x20
@@ -109,6 +117,7 @@ const uint8_t characters[][NOKIA5110_COL_PER_CHAR] = {
     {0x78, 0x46, 0x41, 0x46, 0x78},  // 0x7f DEL
 };
 
+// Buffer with the bytes written to the display
 uint8_t screen_buffer[NOKIA5110_BYTES_NR] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0xC0, 0x60, 0x30, 0x18, 0x84, 0xC2, 0xA3, 0x22, 0x32, 0x54, 0x44, 0xA4, 0x28,
@@ -143,10 +152,17 @@ uint8_t screen_buffer[NOKIA5110_BYTES_NR] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 };
 
+// Helper delay function
+void nokia5110_delay_ms(uint32_t millis);
+
 /**
- * PORTA0 DC
- * PORTA1 RST
- * PORTA4 Chip Select
+ * @ingroup nokia5110
+ * @brief Sets up the Nokia 5110 display.
+ *
+ * Asides the SPI1 pins, the other control pins are connected to:
+ *      - PORTA0: Data/Command (1/0)
+ *      - PORTA1: Reset (activeted with 0)
+ *      - PORTA4: Chip Select (activeted with 0)
  */
 void nokia5110_setup(void) {
     uint8_t buffer[4] = {0};
@@ -166,10 +182,10 @@ void nokia5110_setup(void) {
 
     // LCD setup
     gpio_clr(GPIOA, 0); // DC = 0 --> Command
-    buffer[0] = 0x21;
-    buffer[1] = 0x90;
-    buffer[2] = 0x20;
-    buffer[3] = 0x0C;
+    buffer[0] = 0x21; // Extended instruction set
+    buffer[1] = 0x90; // Sets contrast
+    buffer[2] = 0x20; // Basic instruction set
+    buffer[3] = 0x0C; // Normal mode
     gpio_clr(GPIOA, 4); // Clear CS
     spi_trx(SPI_BUS_1, buffer, 4);
     gpio_set(GPIOA, 4); // Set CS
@@ -178,6 +194,17 @@ void nokia5110_setup(void) {
     nokia5110_move_cursor(0, 0);
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Move display cursor.
+ *
+ * The display pixels are organized vertically in groups of 8.
+ * This results in 84 collumns and only 6 lines, each line with
+ * 8 pixels.
+ *
+ * @param x     Collumn (from 0 to 83).
+ * @param y     Line (from 0 to 5).
+ */
 void nokia5110_move_cursor(uint8_t x, uint8_t y) {
     uint8_t buffer[3] = {0};
 
@@ -186,13 +213,19 @@ void nokia5110_move_cursor(uint8_t x, uint8_t y) {
 
     gpio_clr(GPIOA, 0); // DC = 0 --> Command
     buffer[0] = 0x20;
-    buffer[1] = 0x40 | y; // Linha
-    buffer[2] = 0x80 | x; // Coluna
+    buffer[1] = 0x40 | y; // Line
+    buffer[2] = 0x80 | x; // Collumn
     gpio_clr(GPIOA, 4); // Clear CS
     spi_trx(SPI_BUS_1, buffer, 3);
     gpio_set(GPIOA, 4); // Set CS
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Clear all display pixels.
+ *
+ * @note Doesn't write to the screen_buffer.
+ */
 void nokia5110_clear_screen(void) {
     uint16_t i = 0;
     uint8_t buffer = 0;
@@ -207,9 +240,19 @@ void nokia5110_clear_screen(void) {
     gpio_set(GPIOA, 4); // Set CS
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Writes a character to the screen.
+ *
+ * @param character     Character to print.
+ *
+ * @note Updates the screen_buffer, display_pos and the screen itself.
+ * The screen_buffer update is needed to keep the character on the screen
+ * after the execution of @ref nokia5110_update_screen.
+ */
 void nokia5110_char(char character) {
-    // Adds 1 blank collumn after the char
-    uint8_t buffer[NOKIA5110_COL_PER_CHAR + 1] = {0};
+    // Adds 1 blank collumn after the char (buffer == 0)
+    uint8_t buffer[NOKIA5110_COL_PER_CHAR + 1] = { 0 };
     uint8_t i = 0;
 
     gpio_set(GPIOA, 0); // DC = 1 --> Data
@@ -225,11 +268,25 @@ void nokia5110_char(char character) {
     screen_buffer[display_pos++] = 0;
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Writes a character at the given screen position.
+ *
+ * @param character     Character to print.
+ * @param x             Collumn (from 0 to 83).
+ * @param y             Line (from 0 to 5).
+ */
 void nokia5110_char_at(char character, uint8_t x, uint8_t y) {
     nokia5110_move_cursor(x, y);
     nokia5110_char(character);
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Writes a string to the screen.
+ *
+ * @param string     String to print.
+ */
 void nokia5110_string(char* string) {
     uint16_t i = 0;
 
@@ -239,11 +296,23 @@ void nokia5110_string(char* string) {
     }
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Writes a string at the given screen position.
+ *
+ * @param string     String to print.
+ * @param x          Collumn (from 0 to 83).
+ * @param y          Line (from 0 to 5).
+ */
 void nokia5110_string_at(char* string, uint8_t x, uint8_t y) {
     nokia5110_move_cursor(x, y);
     nokia5110_string(string);
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Writes the screen_buffer to the display.
+ */
 void nokia5110_update_screen(void) {
     uint16_t i = 0;
     uint8_t buffer = 0;
@@ -259,6 +328,10 @@ void nokia5110_update_screen(void) {
     gpio_set(GPIOA, 4); // Set CS
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Clear the screen_buffer.
+ */
 void nokia5110_clear_buffer(void) {
     uint16_t i = 0;
 
@@ -268,8 +341,14 @@ void nokia5110_clear_buffer(void) {
 }
 
 /**
- *  0 <= x < 84
- *  0 <= y < 48
+ * @ingroup nokia5110
+ * @brief Sets a pixel on the screen_buffer.
+ *
+ * @param x     Collumn position (from 0 to 83).
+ * @param y     Line position (from 0 to 47).
+ *
+ * @note The function @ref nokia5110_update_screen must be executed
+ * after @ref nokia5110_set_pixel to actually update the screen.
  */
 void nokia5110_set_pixel(uint8_t x, uint8_t y) {
     uint16_t buffer_pos = (y / 8) * NOKIA5110_MAX_COL_NR + x;
@@ -277,46 +356,88 @@ void nokia5110_set_pixel(uint8_t x, uint8_t y) {
     screen_buffer[buffer_pos] |= (1 << (y % 8));
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Clears a pixel on the screen_buffer.
+ *
+ * @param x     Collumn position (from 0 to 83).
+ * @param y     Line position (from 0 to 47).
+ *
+ * @note The function @ref nokia5110_update_screen must be executed
+ * after @ref nokia5110_clr_pixel to actually update the screen.
+ */
 void nokia5110_clr_pixel(uint8_t x, uint8_t y) {
     uint16_t buffer_pos = (y / 8) * NOKIA5110_MAX_COL_NR + x;
 
     screen_buffer[buffer_pos] &= ~(1 << (y % 8));
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Draws a rectangle to the screen_buffer.
+ *
+ * @param x1    Top left corner x coordinate (from 0 to 83).
+ * @param y1    Top left corner y coordinate (from 0 to 47).
+ * @param x2    Bottom right corner x coordinate (from 0 to 83). NOTE: Must be bigger than x1.
+ * @param y2    Bottom right corner y coordinate (from 0 to 47). NOTE: Must be bigger than y1.
+ *
+ * @note The function @ref nokia5110_update_screen must be executed
+ * after @ref nokia5110_draw_rectangle to actually update the screen.
+ */
 void nokia5110_draw_rectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
     uint8_t i = 0;
 
     for (i = x1; i <= x2; i++) {
-        // Lado de cima
+        // Top side
         nokia5110_set_pixel(i, y1);
-        // Lado de baixo
+        // Bottom Side
         nokia5110_set_pixel(i, y2);
     }
     for (i = y1; i <= y2; i++) {
-        // Lado esquerdo
+        // Left side
         nokia5110_set_pixel(x1, i);
-        // Lado direito
+        // Right side
         nokia5110_set_pixel(x2, i);
     }
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Clears a rectangle on the screen_buffer.
+ *
+ * @param x1    Top left corner x coordinate (from 0 to 83).
+ * @param y1    Top left corner y coordinate (from 0 to 47).
+ * @param x2    Bottom right corner x coordinate (from 0 to 83). NOTE: Must be bigger than x1.
+ * @param y2    Bottom right corner y coordinate (from 0 to 47). NOTE: Must be bigger than y1.
+ *
+ * @note The function @ref nokia5110_update_screen must be executed
+ * after @ref nokia5110_clear_rectangle to actually update the screen.
+ */
 void nokia5110_clear_rectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
     uint8_t i = 0;
 
     for (i = x1; i <= x2; i++) {
-        // Lado de cima
+        // Top side
         nokia5110_clr_pixel(i, y1);
-        // Lado de baixo
+        // Bottom Side
         nokia5110_clr_pixel(i, y2);
     }
     for (i = y1; i <= y2; i++) {
-        // Lado esquerdo
+        // Left side
         nokia5110_clr_pixel(x1, i);
-        // Lado direito
+        // Right side
         nokia5110_clr_pixel(x2, i);
     }
 }
 
+/**
+ * @ingroup nokia5110
+ * @brief Internal milliseconds delay function
+ *
+ * @param millis    Milliseconds to wait.
+ *
+ * @note The values were found empirically.
+ */
 void nokia5110_delay_ms(uint32_t millis) {
     volatile uint32_t a = 0;
 
