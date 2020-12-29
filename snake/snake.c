@@ -1,3 +1,11 @@
+/**
+ * Author: thiagopereiraprado@gmail.com
+ * 
+ * @file
+ * @ingroup snake
+ * @brief Snake game implementation
+ * 
+ */
 #include "snake.h"
 
 #include "nokia5110.h"
@@ -5,7 +13,10 @@
 
 #include <stdlib.h>
 
-// Rectangle size (in pixels)
+// Define as 1 to draw the snake with 3 pixels width
+#define SNAKE_THINNER   0
+
+// Rectangle coordinates (in pixels)
 #define SNAKE_RECT_X1   0
 #define SNAKE_RECT_Y1   0
 #define SNAKE_RECT_X2   83
@@ -44,10 +55,20 @@ void snake_erase_part(snake_pos_t part_coord);
 void snake_draw_food(void);
 
 /**
- *  x --> (2, 81): 20 espaços de 4 pixeis
- *  y --> (2, 45): 11 espaços de 4 pixeis
+ * @ingroup snake
+ * @brief Inits the snake game
  *
- *  Parametros = x de 0 a 20, y de 0 a 11
+ * Sets up the keyboard, resets the game parameters and draw 
+ * the initial food and snake.
+ *
+ * The available pixels for the game are within th following range:
+ * x = (2, 81) and y = (2, 45).
+ *
+ * Each snake part has 4 pixels, so dividing it, the game has 20
+ * horizontal and 11 vertical spaces available.
+ *
+ * @note The function @ref nokia5110_update_screen must be called
+ * to actually update the screen.
  */
 void snake_init(void) {
     uint8_t i = 0;
@@ -65,6 +86,7 @@ void snake_init(void) {
     gpio_setup(GPIO_PORTB, 15, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Up
     gpio_write(GPIO_PORTB, 15, GPIO_STATE_HIGH); // Pull up
 
+    // Draw game borders
     nokia5110_clear_buffer();
     nokia5110_draw_rectangle(SNAKE_RECT_X1, SNAKE_RECT_Y1, SNAKE_RECT_X2, SNAKE_RECT_Y2);
     
@@ -94,6 +116,19 @@ void snake_init(void) {
     snake_draw_food();
 }
 
+/**
+ * @ingroup snake
+ * @brief Updates the snake game
+ *
+ * Recalculates the direction based on the key pressed and moves the
+ * snake head according to it.
+ * Checks if the new head is inside the snake itself, changing the
+ * game state to game over, and if it's equal the food coordinates,
+ * increasing snake size and drawing the next food.
+ *
+ * @note The function @ref nokia5110_update_screen must be called
+ * to actually update the screen.
+ */
 void snake_update(void) {
     uint16_t tail = head + size - 1;
     uint8_t new_head = head - 1;
@@ -204,11 +239,18 @@ void snake_update(void) {
         } while (snake_check_collision(food) == SNAKE_COLLISION_TRUE);
         snake_draw_food();
     } else {
-        // Erases tail
+        // Erases tail only if didn't reached the food
         snake_erase_part(snake[tail]);
     }
 }
 
+/**
+ * @ingroup snake
+ * @brief Reads the keyboard and debounces the keys.
+ *
+ * Only updates the key_pressed varible after the keys' state
+ * keeps stable for 10 cycles.
+ */
 void snake_kbd_debounce(void) {
     static snake_key_t previous_key = SNAKE_KEY_NONE;
     static uint8_t debounce_counter = SNAKE_DEBOUNCE_CNT;
@@ -244,6 +286,14 @@ void snake_kbd_debounce(void) {
     }
 }
 
+/**
+ * @ingroup snake
+ * @brief Checks if the given position is inside the snake.
+ *
+ * @param position  Coordinate to check.
+ *
+ * @return TRUE, if the point is inside the snake, FALSE, otherwise.
+ */
 snake_collision_t snake_check_collision(snake_pos_t position) {
     uint8_t i = 0;
     uint16_t compare_pos = 0;
@@ -264,6 +314,10 @@ snake_collision_t snake_check_collision(snake_pos_t position) {
     return SNAKE_COLLISION_FALSE;
 }
 
+/**
+ * @ingroup snake
+ * @brief Draw the food
+ */
 void snake_draw_food(void) {
     uint8_t x, y;
 
@@ -276,6 +330,12 @@ void snake_draw_food(void) {
     nokia5110_set_pixel(x, y + 2);
 }
 
+/**
+ * @ingroup snake
+ * @brief Draw a snake part
+ *
+ * @param part_coord  Coordinates of the part to draw.
+ */
 void snake_draw_part(snake_pos_t part_coord) {
     uint8_t i, j, x, y;
 
@@ -287,8 +347,7 @@ void snake_draw_part(snake_pos_t part_coord) {
             nokia5110_set_pixel(x + i, y + j);
         }
     }
-    return;
-
+#if (SNAKE_THINNER == 1)
     // Personalizes the part according to directions
     if (direction == SNAKE_DIR_RIGHT || direction == SNAKE_DIR_LEFT) {
         // Horizontal
@@ -344,8 +403,15 @@ void snake_draw_part(snake_pos_t part_coord) {
             }
         }
     }
+#endif /* SNAKE_THINNER */
 }
 
+/**
+ * @ingroup snake
+ * @brief Erase a snake part
+ *
+ * @param part_coord  Coordinates of the part to erase.
+ */
 void snake_erase_part(snake_pos_t part_coord) {
     uint8_t i, j, x, y;
 
