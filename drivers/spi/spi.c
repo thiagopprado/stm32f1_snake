@@ -38,14 +38,14 @@ void spi_setup(spi_bus_t spi) {
         gpio_setup(GPIO_PORTA, 7, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_AF_PUSH_PULL);
 
         /**
-         *  Prescaler f/8 --> 1 Mhz
+         *  Prescaler f/64 --> 1.125 Mhz
          *  CPO = 0, CPHA = 0 --> Clock IDLE low, rising edge
          *  8 bits data frame
          *  MSB first
          *  Master mode
          *  Software slave management --> NSS = 1
          */
-        SPI1->CR1 = (2 << SPI_CR1_BR_Pos) | SPI_CR1_MSTR | SPI_CR1_SSI | SPI_CR1_SSM;
+        SPI1->CR1 = SPI_CR1_BR_2 | SPI_CR1_BR_0 | SPI_CR1_MSTR | SPI_CR1_SSI | SPI_CR1_SSM;
         // SPI Enable
         SPI1->CR1 |= SPI_CR1_SPE;
     } else {
