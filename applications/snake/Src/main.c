@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "gpio.h"
+#include "rcc.h"
 #include "spi.h"
 #include "nokia5110.h"
 #include "snake.h"
@@ -15,6 +16,8 @@ void delay_ms(uint32_t millis) {
 
 int main(void) {
     uint8_t i = 0;
+
+    rcc_clock_init();
 
     spi_setup(SPI_BUS_1);
     nokia5110_setup();
