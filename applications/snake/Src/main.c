@@ -1,17 +1,17 @@
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "gpio.h"
 #include "rcc.h"
 #include "spi.h"
+#include "timer.h"
 #include "nokia5110.h"
 #include "snake.h"
 
-void delay_ms(uint32_t millis) {
-    volatile uint32_t a = 0;
+static volatile bool timer_wait_flag = true;
 
-    for (; millis > 0; millis--) {
-        for (a = 0; a < 800; a++);
-    }
+static void timer_wait_callback(void) {
+    timer_wait_flag = false;
 }
 
 int main(void) {
@@ -24,20 +24,27 @@ int main(void) {
     nokia5110_clear_buffer();
     nokia5110_update_screen();
 
+    // Timer period = 1ms
+    timer_setup(10);
+    timer_attach_callback(timer_wait_callback);
+
     snake_init();
     nokia5110_update_screen();
 
     for(;;) {
-        i++;
+        // Wait for timer ISR
+        while (timer_wait_flag == true);
+        timer_wait_flag = true;
 
         snake_kbd_debounce();
-        if (i == 100) {
+
+        i++;
+        if (i >= 100) {
+            i = 0;
+
             // Update game each ~100ms
             snake_update();
             nokia5110_update_screen();
-            i = 0;
         }
-
-        delay_ms(1);
     }
 }

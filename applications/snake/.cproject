@@ -46,6 +46,7 @@
 									<listOptionValue builtIn="false" value="../../../drivers/rcc"/>
 									<listOptionValue builtIn="false" value="../../../drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../drivers/spi"/>
+									<listOptionValue builtIn="false" value="../../../drivers/timer"/>
 									<listOptionValue builtIn="false" value="../../../drivers/nokia5110"/>
 									<listOptionValue builtIn="false" value="../Inc"/>
 								</option>
@@ -157,6 +158,7 @@
 									<listOptionValue builtIn="false" value="../../../drivers/rcc"/>
 									<listOptionValue builtIn="false" value="../../../drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../drivers/spi"/>
+									<listOptionValue builtIn="false" value="../../../drivers/timer"/>
 									<listOptionValue builtIn="false" value="../../../drivers/nokia5110"/>
 									<listOptionValue builtIn="false" value="../Inc"/>
 								</option>
