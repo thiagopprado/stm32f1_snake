@@ -77,6 +77,21 @@ void timer_setup(timer_idx_t timer, uint32_t psc, uint32_t arr) {
 }
 
 /**
+ * @brief Updates timer prescaler (frequency).
+ * 
+ * @param timer     Timer index.
+ * @param psc       Prescaler.
+ * @param arr       Autoreload value.
+ */
+void timer_update_psc(timer_idx_t timer, uint32_t psc, uint32_t arr)
+{
+    TIM_TypeDef *timer_ptr = timer_get_ptr(timer);
+
+    timer_ptr->PSC = psc;
+    timer_ptr->ARR = arr;
+}
+
+/**
  * @ingroup timer
  * @brief Attach a callback function to timer 1 ISR.
  */
@@ -111,6 +126,92 @@ void timer_attach_callback(timer_idx_t timer, timer_callback_t callback) {
     NVIC_SetPriority(irqn, 0);
 
     timer_callback[timer] = callback;
+}
+
+/**
+ * @ingroup timer
+ * @brief Sets up PWM.
+ * 
+ * @param timer     Timer index.
+ * @param pwm_ch    PWM channel.
+ */
+void timer_pwm_setup(timer_idx_t timer, uint8_t pwm_ch) {
+    TIM_TypeDef *timer_ptr = timer_get_ptr(timer);
+
+    if (timer_ptr == NULL || pwm_ch >= TIMER_PWM_CH_NR) {
+        return;
+    }
+
+    timer_ptr->CR1 &= ~(TIM_CR1_CEN); // Disable counter
+
+    timer_ptr->CR1 |= TIM_CR1_ARPE;
+
+    switch (pwm_ch) {
+        case 0: {
+            timer_ptr->CCMR1 |= TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1PE; // PWM mode 1
+            timer_ptr->CCER |= TIM_CCER_CC1E;
+            timer_ptr->CCR1 = 0;
+            break;
+        }
+        case 1: {
+            timer_ptr->CCMR1 |= TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2PE; // PWM mode 1
+            timer_ptr->CCER |= TIM_CCER_CC2E;
+            timer_ptr->CCR2 = 0;
+            break;
+        }
+        case 2: {
+            timer_ptr->CCMR2 |= TIM_CCMR2_OC3M_2 | TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3PE; // PWM mode 1
+            timer_ptr->CCER |= TIM_CCER_CC3E;
+            timer_ptr->CCR3 = 0;
+            break;
+        }
+        case 3: {
+            timer_ptr->CCMR2 |= TIM_CCMR2_OC4M_2 | TIM_CCMR2_OC4M_1 | TIM_CCMR2_OC4PE; // PWM mode 1
+            timer_ptr->CCER |= TIM_CCER_CC4E;
+            timer_ptr->CCR4 = 0;
+            break;
+        }
+    }
+
+    timer_ptr->EGR |= TIM_EGR_UG;
+    timer_ptr->CR1 |= TIM_CR1_CEN; // Enable counter
+}
+
+/**
+ * @brief Sets PWM duty cycle.
+ * 
+ * @param timer     Timer index.
+ * @param pwm_ch    PWM channel.
+ * @param ccr       CCR value.
+ * 
+ * Duty cycle is defined as CCR / ARR.
+ */
+void timer_pwm_set_duty(timer_idx_t timer, uint8_t pwm_ch, uint32_t ccr)
+{
+    TIM_TypeDef *timer_ptr = timer_get_ptr(timer);
+
+    if (timer_ptr == NULL || pwm_ch >= TIMER_PWM_CH_NR) {
+        return;
+    }
+
+    switch (pwm_ch) {
+        case 0: {
+            timer_ptr->CCR1 = ccr;
+            break;
+        }
+        case 1: {
+            timer_ptr->CCR2 = ccr;
+            break;
+        }
+        case 2: {
+            timer_ptr->CCR3 = ccr;
+            break;
+        }
+        case 3: {
+            timer_ptr->CCR4 = ccr;
+            break;
+        }
+    }
 }
 
 /**
