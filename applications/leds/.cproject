@@ -48,6 +48,9 @@
 									<listOptionValue builtIn="false" value="../../../drivers/rcc"/>
 									<listOptionValue builtIn="false" value="../../../drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../drivers/timer"/>
+									<listOptionValue builtIn="false" value="../../../drivers/led_ws2812"/>
+									<listOptionValue builtIn="false" value="../../../modules/buzzer"/>
+									<listOptionValue builtIn="false" value="../../../modules/infrared"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.129192912" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -80,8 +83,13 @@
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_coreid.966804401.67648332" name="Core" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_coreid.966804401"/>
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_board.1613965622.754396434" name="Board" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_board.1613965622"/>
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults.201873465.638178945" name="Defaults" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults.201873465"/>
-							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.501003777" name="MCU GCC Assembler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.730288064"/>
-							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.1578812257" name="MCU GCC Compiler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.149565576"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform" isAbstract="false" osList="all" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform"/>
+							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.501003777" name="MCU GCC Assembler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.730288064">
+								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.201169761" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
+							</tool>
+							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.1578812257" name="MCU GCC Compiler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.149565576">
+								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1093263212" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
+							</tool>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.2057851234" name="MCU G++ Compiler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.1670000715"/>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.1029808260" name="MCU GCC Linker" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.1027886272"/>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.1951013064" name="MCU G++ Linker" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.1726251089"/>
@@ -101,6 +109,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
 						<entry excluding="spi|nokia5110" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="modules"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -149,6 +158,9 @@
 									<listOptionValue builtIn="false" value="../../../drivers/rcc"/>
 									<listOptionValue builtIn="false" value="../../../drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../drivers/timer"/>
+									<listOptionValue builtIn="false" value="../../../drivers/led_ws2812"/>
+									<listOptionValue builtIn="false" value="../../../modules/buzzer"/>
+									<listOptionValue builtIn="false" value="../../../modules/infrared"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.598422548" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
