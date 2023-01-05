@@ -16,6 +16,11 @@
 #define LED_FADE_BRIGHT_STEP_SLOW   1
 #define LED_FADE_BRIGHT_STEP_FAST   5
 
+#define LED_SNAKE_SIZE          10
+#define LED_SNAKE_BRIGHT_MAX    LED_WS2812_COLOR_MAX
+#define LED_SNAKE_BRIGHT_STEP   (LED_WS2812_COLOR_MAX / (LED_SNAKE_SIZE - 1))
+#define LED_SNAKE_DELAY         4
+
 /**
  * @brief Times.
  * 
@@ -30,6 +35,7 @@
 /** Types --------------------------------------------------------- */
 typedef enum {
     LED_EFFECT_FADE = 0,
+    LED_EFFECT_SNAKE,
 } led_effect_t;
 
 typedef enum {
@@ -49,6 +55,12 @@ typedef enum {
     LED_FADE_SLOW = 0,
     LED_FADE_FAST,
 } led_fade_speed_t;
+
+typedef enum {
+    LED_SNAKE_RED = 0,
+    LED_SNAKE_YELLOW,
+    LED_SNAKE_GREEN,
+} led_snake_state_t;
 
 /** Variables ----------------------------------------------------- */
 static volatile uint32_t timer_counter = 0;
@@ -83,9 +95,13 @@ static led_fade_dir_t led_fade_dir = LED_FADE_UP;
 static led_fade_speed_t led_fade_speed = LED_FADE_SLOW;
 static int32_t led_fade_bright = 0;
 
+static led_snake_state_t led_snake_state = LED_SNAKE_RED;
+static uint32_t led_snake_head = 0;
+
 /** Prototypes ---------------------------------------------------- */
 static void led_update(void);
 static bool led_effect_fade(void);
+static bool led_effect_snake(void);
 
 static void timer_callback(void);
 static bool timer_check_timeout(uint32_t timeshot, uint32_t timeout);
@@ -100,6 +116,19 @@ static void led_update(void) {
     switch (led_effect) {
         case LED_EFFECT_FADE: {
             if (led_effect_fade() == true) {
+                led_effect = LED_EFFECT_SNAKE;
+            }
+            break;
+        }
+        case LED_EFFECT_SNAKE: {
+            if (led_effect_snake() == true) {
+                led_effect = LED_EFFECT_FADE;
+            }
+            break;
+        }
+        case LED_EFFECT_REM_CONTROL: {
+            if (led_effect_rem_control() == true) {
+                led_effect = LED_EFFECT_FADE;
             }
             break;
         }
@@ -121,6 +150,7 @@ static bool led_effect_fade(void) {
     uint32_t bright_step = 0;
     uint32_t i = 0;
 
+    // Prints the effect
     switch (led_fade_state) {
         case LED_FADE_1:
         case LED_FADE_5: {
@@ -178,10 +208,12 @@ static bool led_effect_fade(void) {
         bright_step = LED_FADE_BRIGHT_STEP_FAST;
     }
 
+    // Updates the bright
     if (led_fade_dir == LED_FADE_UP) {
         led_fade_bright += bright_step;
         if (led_fade_bright > LED_WS2812_COLOR_MAX) {
             led_fade_bright = LED_WS2812_COLOR_MAX;
+            // Updates the fade direction
             led_fade_dir = LED_FADE_DOWN;
         }
     } else {
@@ -190,16 +222,68 @@ static bool led_effect_fade(void) {
             led_fade_bright = 0;
             led_fade_dir = LED_FADE_UP;
 
+            // Updates the fade pattern
             led_fade_state++;
             if (led_fade_state > LED_FADE_5) {
                 led_fade_state = LED_FADE_1;
 
+                // Updates the fade speed
                 if (led_fade_speed == LED_FADE_SLOW) {
                     led_fade_speed = LED_FADE_FAST;
                 } else {
                     led_fade_speed = LED_FADE_SLOW;
                     effect_finish = true;
                 }
+            }
+        }
+    }
+
+    return effect_finish;
+}
+
+/**
+ * @brief Updates LED strip with snake effect.
+ * 
+ * @return true when the effect is finished
+ */
+static bool led_effect_snake(void) {
+    static uint32_t time_counter = 0;
+    bool effect_finish = false;
+    int32_t i = 0;
+
+    // Prints the snake from the head
+    for (i = 0; i < LED_SNAKE_SIZE; i++) {
+        int32_t led_pos = led_snake_head - i;
+
+        if (led_pos >= 0 && led_pos < LED_WS2812_NR) {
+            uint32_t led_bright = LED_SNAKE_BRIGHT_MAX - i * LED_SNAKE_BRIGHT_STEP;
+
+            if (led_snake_state == LED_SNAKE_RED) {
+                led_color[led_pos] = LED_WS2812_GET_R(led_bright);
+
+            } else if (led_snake_state == LED_SNAKE_GREEN) {
+                led_color[led_pos] = LED_WS2812_GET_G(led_bright);
+
+            } else if (led_snake_state == LED_SNAKE_YELLOW) {
+                led_color[led_pos] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_G(led_bright);
+            }
+        }
+    }
+
+    time_counter++;
+    if (time_counter > LED_SNAKE_DELAY) {
+        time_counter = 0;
+
+        // Updates snake head
+        led_snake_head++;
+        if (led_snake_head >= LED_WS2812_NR + LED_SNAKE_SIZE) {
+            led_snake_head = 0;
+
+            // Updates snake color
+            led_snake_state++;
+            if (led_snake_state > LED_SNAKE_GREEN) {
+                led_snake_state = LED_SNAKE_RED;
+                effect_finish = true;
             }
         }
     }
