@@ -6,9 +6,12 @@
 #include "core_cm3.h"
 
 #include "rcc.h"
+#include "led_ws2812.h"
 #include "timer.h"
 
 #include "buzzer.h"
+#include "infrared.h"
+
 /** Definitions --------------------------------------------------- */
 /**
  * @brief Times.
@@ -58,6 +61,8 @@ static bool timer_check_timeout(uint32_t timeshot, uint32_t timeout);
  */
 static void timer_callback(void) {
     timer_counter++;
+
+    infrared_update();
 }
 
 static bool timer_check_timeout(uint32_t timeshot, uint32_t timeout) {
