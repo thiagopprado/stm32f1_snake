@@ -21,6 +21,9 @@
 #define LED_SNAKE_BRIGHT_STEP   (LED_WS2812_COLOR_MAX / (LED_SNAKE_SIZE - 1))
 #define LED_SNAKE_DELAY         4
 
+#define LED_REM_CONTROL_DELAY   20
+#define LED_REM_CONTROL_STEP    10
+
 /**
  * @brief Times.
  * 
@@ -36,6 +39,7 @@
 typedef enum {
     LED_EFFECT_FADE = 0,
     LED_EFFECT_SNAKE,
+    LED_EFFECT_REM_CONTROL,
 } led_effect_t;
 
 typedef enum {
@@ -61,6 +65,16 @@ typedef enum {
     LED_SNAKE_YELLOW,
     LED_SNAKE_GREEN,
 } led_snake_state_t;
+
+typedef enum {
+    LED_REM_CONTROL_RED = 0,
+    LED_REM_CONTROL_GREEN,
+    LED_REM_CONTROL_BLUE,
+    LED_REM_CONTROL_YELLOW,
+    LED_REM_CONTROL_MAGENTA,
+    LED_REM_CONTROL_CYAN,
+    LED_REM_CONTROL_WHITE,
+} led_rem_control_state_t;
 
 /** Variables ----------------------------------------------------- */
 static volatile uint32_t timer_counter = 0;
@@ -102,6 +116,7 @@ static uint32_t led_snake_head = 0;
 static void led_update(void);
 static bool led_effect_fade(void);
 static bool led_effect_snake(void);
+static bool led_effect_rem_control(void);
 
 static void timer_callback(void);
 static bool timer_check_timeout(uint32_t timeshot, uint32_t timeout);
@@ -112,6 +127,12 @@ static bool timer_check_timeout(uint32_t timeshot, uint32_t timeout);
  */
 static void led_update(void) {
     memset(led_color, 0, sizeof(led_color));
+
+    if (led_effect != LED_EFFECT_REM_CONTROL) {
+        if (infrared_decode() == INFRARED_KEY_ENTER) {
+            led_effect = LED_EFFECT_REM_CONTROL;
+        }
+    }
 
     switch (led_effect) {
         case LED_EFFECT_FADE: {
@@ -289,6 +310,97 @@ static bool led_effect_snake(void) {
     }
 
     return effect_finish;
+}
+
+/**
+ * @brief Updates LED strip with remote control commands.
+ * 
+ * @return true when the effect is finished
+ */
+static bool led_effect_rem_control(void) {
+    static led_rem_control_state_t led_rem_control_state = LED_REM_CONTROL_RED;
+    static uint32_t ir_read_cooldown = 0;
+    static int32_t led_bright = 0;
+    bool finish_effect = false;
+    uint32_t i = 0;
+    ir_key_id_t key_pressed = infrared_decode();
+
+    if (ir_read_cooldown > 0) {
+        ir_read_cooldown--;
+    }
+
+    // Checks for remote control commands
+    if (key_pressed == INFRARED_KEY_ESC) {
+        finish_effect = true;
+
+    } else if (key_pressed == INFRARED_KEY_RIGHT && ir_read_cooldown == 0) {
+        led_rem_control_state++;
+        if (led_rem_control_state > LED_REM_CONTROL_WHITE) {
+            led_rem_control_state = LED_REM_CONTROL_RED;
+        }
+        ir_read_cooldown = LED_REM_CONTROL_DELAY;
+
+    } else if (key_pressed == INFRARED_KEY_LEFT && ir_read_cooldown == 0) {
+        if (led_rem_control_state == LED_REM_CONTROL_RED) {
+            led_rem_control_state = LED_REM_CONTROL_WHITE;
+
+        } else {
+            led_rem_control_state--;
+        }
+
+        ir_read_cooldown = LED_REM_CONTROL_DELAY;
+
+    } else if (key_pressed == INFRARED_KEY_UP) {
+        led_bright += LED_REM_CONTROL_STEP;
+        if (led_bright > LED_WS2812_COLOR_MAX) {
+            led_bright = LED_WS2812_COLOR_MAX;
+        }
+
+    } else if (key_pressed == INFRARED_KEY_DOWN) {
+        led_bright -= LED_REM_CONTROL_STEP;
+        if (led_bright < 0) {
+            led_bright = 0;
+        }
+    }
+
+    // Updates the LEDs
+    for (i = 0; i < LED_WS2812_NR; i++) {
+        switch (led_rem_control_state) {
+            case LED_REM_CONTROL_RED: {
+                led_color[i] = LED_WS2812_GET_R(led_bright);
+                break;
+            }
+            case LED_REM_CONTROL_GREEN: {
+                led_color[i] = LED_WS2812_GET_G(led_bright);
+                break;
+            }
+            case LED_REM_CONTROL_BLUE: {
+                led_color[i] = LED_WS2812_GET_B(led_bright);
+                break;
+            }
+            case LED_REM_CONTROL_YELLOW: {
+                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_G(led_bright);
+                break;
+            }
+            case LED_REM_CONTROL_MAGENTA: {
+                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_B(led_bright);
+                break;
+            }
+            case LED_REM_CONTROL_CYAN: {
+                led_color[i] = LED_WS2812_GET_G(led_bright) | LED_WS2812_GET_B(led_bright);
+                break;
+            }
+            case LED_REM_CONTROL_WHITE: {
+                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_G(led_bright) | LED_WS2812_GET_B(led_bright);;
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    return finish_effect;
 }
 
 /**
