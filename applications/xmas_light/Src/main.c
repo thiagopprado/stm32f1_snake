@@ -13,6 +13,9 @@
 #include "infrared.h"
 
 /** Definitions --------------------------------------------------- */
+#define LED_FADE_BRIGHT_STEP_SLOW   1
+#define LED_FADE_BRIGHT_STEP_FAST   5
+
 /**
  * @brief Times.
  * 
@@ -25,6 +28,27 @@
 /** @} */
 
 /** Types --------------------------------------------------------- */
+typedef enum {
+    LED_EFFECT_FADE = 0,
+} led_effect_t;
+
+typedef enum {
+    LED_FADE_1 = 0,
+    LED_FADE_2,
+    LED_FADE_3,
+    LED_FADE_4,
+    LED_FADE_5,
+} led_fade_state_t;
+
+typedef enum {
+    LED_FADE_UP = 0,
+    LED_FADE_DOWN,
+} led_fade_dir_t;
+
+typedef enum {
+    LED_FADE_SLOW = 0,
+    LED_FADE_FAST,
+} led_fade_speed_t;
 
 /** Variables ----------------------------------------------------- */
 static volatile uint32_t timer_counter = 0;
@@ -52,8 +76,16 @@ static buzzer_note_t sheet_music[] = {
 
 static uint32_t led_color[LED_WS2812_NR] = { 0 };
 
+static led_effect_t led_effect = LED_EFFECT_FADE;
+
+static led_fade_state_t led_fade_state = LED_FADE_1;
+static led_fade_dir_t led_fade_dir = LED_FADE_UP;
+static led_fade_speed_t led_fade_speed = LED_FADE_SLOW;
+static int32_t led_fade_bright = 0;
+
 /** Prototypes ---------------------------------------------------- */
 static void led_update(void);
+static bool led_effect_fade(void);
 
 static void timer_callback(void);
 static bool timer_check_timeout(uint32_t timeshot, uint32_t timeout);
@@ -65,7 +97,114 @@ static bool timer_check_timeout(uint32_t timeshot, uint32_t timeout);
 static void led_update(void) {
     memset(led_color, 0, sizeof(led_color));
 
+    switch (led_effect) {
+        case LED_EFFECT_FADE: {
+            if (led_effect_fade() == true) {
+            }
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+
     led_ws2812_write(led_color, LED_WS2812_NR);
+}
+
+/**
+ * @brief Updates LED strip with fade effect.
+ * 
+ * @return true when the effect is finished
+ */
+static bool led_effect_fade(void) {
+    bool effect_finish = false;
+    uint32_t bright_step = 0;
+    uint32_t i = 0;
+
+    switch (led_fade_state) {
+        case LED_FADE_1:
+        case LED_FADE_5: {
+            for (i = 0; i < LED_WS2812_NR; i += 4) {
+                led_color[i] = LED_WS2812_GET_R(led_fade_bright) | LED_WS2812_GET_G(led_fade_bright);
+            }
+            for (i = 1; i < LED_WS2812_NR; i += 4) {
+                led_color[i] = LED_WS2812_GET_R(LED_WS2812_COLOR_MAX - led_fade_bright);
+            }
+            for (i = 2; i < LED_WS2812_NR; i += 4) {
+                led_color[i] = LED_WS2812_GET_G(led_fade_bright);
+            }
+            for (i = 3; i < LED_WS2812_NR; i += 4) {
+                led_color[i] = LED_WS2812_GET_R(LED_WS2812_COLOR_MAX - led_fade_bright);
+            }
+
+            break;
+        }
+        case LED_FADE_2:
+        case LED_FADE_4: {
+            for (i = 0; i < LED_WS2812_NR; i += 4) {
+                led_color[i] = LED_WS2812_GET_G(led_fade_bright);
+            }
+            for (i = 1; i < LED_WS2812_NR; i += 4) {
+                led_color[i] = LED_WS2812_GET_R(LED_WS2812_COLOR_MAX - led_fade_bright) | LED_WS2812_GET_G(LED_WS2812_COLOR_MAX - led_fade_bright);
+            }
+            for (i = 2; i < LED_WS2812_NR; i += 4) {
+                led_color[i] = LED_WS2812_GET_R(led_fade_bright);
+            }
+            for (i = 3; i < LED_WS2812_NR; i += 4) {
+                led_color[i] = LED_WS2812_GET_R(LED_WS2812_COLOR_MAX - led_fade_bright) | LED_WS2812_GET_G(LED_WS2812_COLOR_MAX - led_fade_bright);
+            }
+
+            break;
+        }
+        case LED_FADE_3: {
+            for (i = 0; i < LED_WS2812_NR; i += 2) {
+                led_color[i] = LED_WS2812_GET_R(led_fade_bright) | LED_WS2812_GET_G(led_fade_bright);
+            }
+
+            for (i = 1; i < LED_WS2812_NR; i += 2) {
+                led_color[i] = LED_WS2812_GET_R(LED_WS2812_COLOR_MAX - led_fade_bright) | LED_WS2812_GET_G(LED_WS2812_COLOR_MAX - led_fade_bright);
+            }
+
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+
+    if (led_fade_speed == LED_FADE_SLOW) {
+        bright_step = LED_FADE_BRIGHT_STEP_SLOW;
+    } else {
+        bright_step = LED_FADE_BRIGHT_STEP_FAST;
+    }
+
+    if (led_fade_dir == LED_FADE_UP) {
+        led_fade_bright += bright_step;
+        if (led_fade_bright > LED_WS2812_COLOR_MAX) {
+            led_fade_bright = LED_WS2812_COLOR_MAX;
+            led_fade_dir = LED_FADE_DOWN;
+        }
+    } else {
+        led_fade_bright -= bright_step;
+        if (led_fade_bright < 0) {
+            led_fade_bright = 0;
+            led_fade_dir = LED_FADE_UP;
+
+            led_fade_state++;
+            if (led_fade_state > LED_FADE_5) {
+                led_fade_state = LED_FADE_1;
+
+                if (led_fade_speed == LED_FADE_SLOW) {
+                    led_fade_speed = LED_FADE_FAST;
+                } else {
+                    led_fade_speed = LED_FADE_SLOW;
+                    effect_finish = true;
+                }
+            }
+        }
+    }
+
+    return effect_finish;
 }
 
 /**
@@ -98,6 +237,7 @@ int main(void) {
     rcc_clock_init();
 
     buzzer_setup();
+    infrared_setup();
     led_ws2812_setup();
 
     timer_setup(TIMER_1, 71, 99);
