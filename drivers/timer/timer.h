@@ -13,7 +13,14 @@
 
 typedef void (*timer_callback_t)(void);
 
-void timer_setup(uint32_t time);
-void timer_attach_callback(timer_callback_t callback);
+typedef enum {
+    TIMER_1 = 0,
+    TIMER_2,
+    TIMER_3,
+    TIMER_NR,
+} timer_idx_t;
+
+void timer_setup(timer_idx_t timer, uint32_t psc, uint32_t arr);
+void timer_attach_callback(timer_idx_t timer, timer_callback_t callback);
 
 #endif /* TIMER_H */

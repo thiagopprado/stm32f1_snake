@@ -25,8 +25,8 @@ int main(void) {
     nokia5110_update_screen();
 
     // Timer period = 1ms
-    timer_setup(10);
-    timer_attach_callback(timer_wait_callback);
+    timer_setup(TIMER_1, 71, 999);
+    timer_attach_callback(TIMER_1, timer_wait_callback);
 
     snake_init();
     nokia5110_update_screen();
