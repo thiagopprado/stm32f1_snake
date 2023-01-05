@@ -10,36 +10,9 @@
 
 #include <stddef.h>
 
-#include "stm32f1xx.h"
 #include "core_cm3.h"
 
 timer_callback_t timer_callback[TIMER_NR] = { NULL };
-
-static TIM_TypeDef* timer_get_ptr(timer_idx_t timer);
-
-static TIM_TypeDef* timer_get_ptr(timer_idx_t timer) {
-    TIM_TypeDef *timer_ptr = NULL;
-
-    switch (timer) {
-        case TIMER_1: {
-            timer_ptr = TIM1;
-            break;
-        }
-        case TIMER_2: {
-            timer_ptr = TIM2;
-            break;
-        }
-        case TIMER_3: {
-            timer_ptr = TIM3;
-            break;
-        }
-        default: {
-            break;
-        }
-    }
-
-    return timer_ptr;
-}
 
 /**
  * @ingroup timer
@@ -216,6 +189,37 @@ void timer_pwm_set_duty(timer_idx_t timer, timer_pwm_ch_t pwm_ch, uint32_t ccr) 
             break;
         }
     }
+}
+
+/**
+ * @brief Gets the timer structure pointer.
+ * 
+ * @param timer     Timer index.
+ * 
+ * @return Pointer for the timer structure.
+ */
+TIM_TypeDef* timer_get_ptr(timer_idx_t timer) {
+    TIM_TypeDef *timer_ptr = NULL;
+
+    switch (timer) {
+        case TIMER_1: {
+            timer_ptr = TIM1;
+            break;
+        }
+        case TIMER_2: {
+            timer_ptr = TIM2;
+            break;
+        }
+        case TIMER_3: {
+            timer_ptr = TIM3;
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+
+    return timer_ptr;
 }
 
 /**
