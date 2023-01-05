@@ -1,7 +1,5 @@
 **/Debug
 **Debug.cfg
-**Debug.launch
 **/Release
 **Release.cfg
-**Release.launch
 **/.vscode
