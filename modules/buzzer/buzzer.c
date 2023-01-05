@@ -26,8 +26,7 @@ static uint32_t buzzer_note_freq[BUZZER_NOTE_NR] = { 131, 147, 165, 175, 196, 22
 /**
  * @brief Sets up buzzer pin and peripherals.
  */
-void buzzer_setup(void)
-{
+void buzzer_setup(void) {
     gpio_setup(BUZZER_PORT, BUZZER_PIN, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_AF_PUSH_PULL);
 
     timer_setup(BUZZER_TIMER, BUZZER_PWM_PSC, BUZZER_PWM_ARR);
@@ -39,8 +38,7 @@ void buzzer_setup(void)
  * 
  * @param note  Note to be played.
  */
-void buzzer_play_note(buzzer_note_t note)
-{
+void buzzer_play_note(buzzer_note_t note) {
     if (note >= BUZZER_NOTE_NR) {
         return;
     }
