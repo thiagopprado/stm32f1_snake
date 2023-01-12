@@ -21,7 +21,8 @@
 #define LED_SNAKE_BRIGHT_STEP   (LED_WS2812_COLOR_MAX / (LED_SNAKE_SIZE - 1))
 #define LED_SNAKE_DELAY         4
 
-#define LED_CONTROL_DELAY           20
+#define LED_CONTROL_DELAY_FAST      20
+#define LED_CONTROL_DELAY_SLOW      50
 #define LED_CONTROL_BRIGHT_STEP     10
 
 /**
@@ -36,6 +37,16 @@
 /** @} */
 
 /** Types --------------------------------------------------------- */
+typedef enum {
+    LED_COLOR_MODE_STATIC = 0,
+    LED_COLOR_MODE_PULSE,
+} led_color_mode_t;
+
+typedef enum {
+    LED_PULSE_UP = 0,
+    LED_PULSE_DOWN,
+} led_pulse_dir_t;
+
 typedef enum {
     LED_XMAS_FADE = 0,
     LED_XMAS_SNAKE,
@@ -103,6 +114,10 @@ static buzzer_note_t sheet_music[] = {
 static uint32_t led_color[LED_WS2812_NR] = { 0 };
 static int32_t led_bright = LED_WS2812_COLOR_MAX;
 
+static led_color_mode_t led_color_mode = LED_COLOR_MODE_STATIC;
+static led_pulse_dir_t led_pulse_dir = LED_PULSE_UP;
+static int32_t led_pulse_bright = 0;
+
 static led_effect_t led_effect = LED_EFFECT_RED;
 
 static led_xmas_t led_xmas_state = LED_XMAS_FADE;
@@ -146,7 +161,7 @@ static void led_update(void) {
             led_effect++;
         }
 
-        ir_read_cooldown = LED_CONTROL_DELAY;
+        ir_read_cooldown = LED_CONTROL_DELAY_FAST;
 
     } else if (key_pressed == INFRARED_KEY_LEFT && ir_read_cooldown == 0) {
         if (led_effect == LED_EFFECT_RED) {
@@ -155,7 +170,18 @@ static void led_update(void) {
             led_effect--;
         }
 
-        ir_read_cooldown = LED_CONTROL_DELAY;
+        ir_read_cooldown = LED_CONTROL_DELAY_FAST;
+
+    } else if (key_pressed == INFRARED_KEY_ENTER && ir_read_cooldown == 0) {
+        if (led_color_mode == LED_COLOR_MODE_STATIC) {
+            led_color_mode = LED_COLOR_MODE_PULSE;
+            led_pulse_bright = led_bright;
+
+        } else if (led_color_mode == LED_COLOR_MODE_PULSE) {
+            led_color_mode = LED_COLOR_MODE_STATIC;
+        }
+
+        ir_read_cooldown = LED_CONTROL_DELAY_FAST;
 
     } else if (key_pressed == INFRARED_KEY_UP) {
         led_bright += LED_CONTROL_BRIGHT_STEP;
@@ -196,36 +222,66 @@ static void led_update(void) {
  * @param effect    Effect to update.
  */
 static void led_effect_color(led_effect_t effect) {
+    static uint32_t pulse_delay = 0;
+    int32_t color_bright = 0;
     uint32_t i = 0;
+
+    if (pulse_delay > 0) {
+        pulse_delay--;
+    }
+
+    if (led_color_mode == LED_COLOR_MODE_STATIC) {
+        color_bright = led_bright;
+    } else if (led_color_mode == LED_COLOR_MODE_PULSE) {
+        color_bright = led_pulse_bright;
+
+        if (pulse_delay == 0) {
+            pulse_delay = 3;
+            if (led_pulse_dir == LED_PULSE_UP) {
+                led_pulse_bright++;
+                if (led_pulse_bright > LED_WS2812_COLOR_MAX) {
+                    led_pulse_bright = LED_WS2812_COLOR_MAX;
+                    led_pulse_dir = LED_PULSE_DOWN;
+                }
+
+            } else {
+                led_pulse_bright--;
+                if (led_pulse_bright < 0) {
+                    led_pulse_bright = 0;
+                    led_pulse_dir = LED_PULSE_UP;
+                }
+            }
+        }
+    }
 
     for (i = 0; i < LED_WS2812_NR; i++) {
         switch (led_effect) {
             case LED_EFFECT_RED: {
-                led_color[i] = LED_WS2812_GET_R(led_bright);
+                led_color[i] = LED_WS2812_GET_R(color_bright);
                 break;
             }
             case LED_EFFECT_GREEN: {
-                led_color[i] = LED_WS2812_GET_G(led_bright);
+                led_color[i] = LED_WS2812_GET_G(color_bright);
                 break;
             }
             case LED_EFFECT_BLUE: {
-                led_color[i] = LED_WS2812_GET_B(led_bright);
+                led_color[i] = LED_WS2812_GET_B(color_bright);
                 break;
             }
             case LED_EFFECT_YELLOW: {
-                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_G(led_bright);
+                led_color[i] = LED_WS2812_GET_R(color_bright) | LED_WS2812_GET_G(color_bright);
                 break;
             }
             case LED_EFFECT_MAGENTA: {
-                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_B(led_bright);
+                led_color[i] = LED_WS2812_GET_R(color_bright) | LED_WS2812_GET_B(color_bright);
                 break;
             }
             case LED_EFFECT_CYAN: {
-                led_color[i] = LED_WS2812_GET_G(led_bright) | LED_WS2812_GET_B(led_bright);
+                led_color[i] = LED_WS2812_GET_G(color_bright) | LED_WS2812_GET_B(color_bright);
                 break;
             }
             case LED_EFFECT_WHITE: {
-                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_G(led_bright) | LED_WS2812_GET_B(led_bright);;
+                led_color[i] = LED_WS2812_GET_R(color_bright) | LED_WS2812_GET_G(color_bright) | LED_WS2812_GET_B(color_bright);
                 break;
             }
             default: {
