@@ -21,8 +21,8 @@
 #define LED_SNAKE_BRIGHT_STEP   (LED_WS2812_COLOR_MAX / (LED_SNAKE_SIZE - 1))
 #define LED_SNAKE_DELAY         4
 
-#define LED_REM_CONTROL_DELAY   20
-#define LED_REM_CONTROL_STEP    10
+#define LED_CONTROL_DELAY           20
+#define LED_CONTROL_BRIGHT_STEP     10
 
 /**
  * @brief Times.
@@ -37,10 +37,9 @@
 
 /** Types --------------------------------------------------------- */
 typedef enum {
-    LED_EFFECT_FADE = 0,
-    LED_EFFECT_SNAKE,
-    LED_EFFECT_REM_CONTROL,
-} led_effect_t;
+    LED_XMAS_FADE = 0,
+    LED_XMAS_SNAKE,
+} led_xmas_t;
 
 typedef enum {
     LED_FADE_1 = 0,
@@ -67,14 +66,15 @@ typedef enum {
 } led_snake_state_t;
 
 typedef enum {
-    LED_REM_CONTROL_RED = 0,
-    LED_REM_CONTROL_GREEN,
-    LED_REM_CONTROL_BLUE,
-    LED_REM_CONTROL_YELLOW,
-    LED_REM_CONTROL_MAGENTA,
-    LED_REM_CONTROL_CYAN,
-    LED_REM_CONTROL_WHITE,
-} led_rem_control_state_t;
+    LED_EFFECT_RED = 0,
+    LED_EFFECT_GREEN,
+    LED_EFFECT_BLUE,
+    LED_EFFECT_YELLOW,
+    LED_EFFECT_MAGENTA,
+    LED_EFFECT_CYAN,
+    LED_EFFECT_WHITE,
+    LED_EFFECT_XMAS,
+} led_effect_t;
 
 /** Variables ----------------------------------------------------- */
 static volatile uint32_t timer_counter = 0;
@@ -101,8 +101,11 @@ static buzzer_note_t sheet_music[] = {
 };
 
 static uint32_t led_color[LED_WS2812_NR] = { 0 };
+static int32_t led_bright = LED_WS2812_COLOR_MAX;
 
-static led_effect_t led_effect = LED_EFFECT_FADE;
+static led_effect_t led_effect = LED_EFFECT_RED;
+
+static led_xmas_t led_xmas_state = LED_XMAS_FADE;
 
 static led_fade_state_t led_fade_state = LED_FADE_1;
 static led_fade_dir_t led_fade_dir = LED_FADE_UP;
@@ -114,9 +117,10 @@ static uint32_t led_snake_head = 0;
 
 /** Prototypes ---------------------------------------------------- */
 static void led_update(void);
-static bool led_effect_fade(void);
-static bool led_effect_snake(void);
-static bool led_effect_rem_control(void);
+static void led_effect_color(led_effect_t effect);
+static void led_effect_xmas(void);
+static bool led_xmas_fade(void);
+static bool led_xmas_snake(void);
 
 static void timer_callback(void);
 static bool timer_check_timeout(uint32_t timeshot, uint32_t timeout);
@@ -126,34 +130,59 @@ static bool timer_check_timeout(uint32_t timeshot, uint32_t timeout);
  * @brief Updates the LED strip.
  */
 static void led_update(void) {
+    static uint32_t ir_read_cooldown = 0;
+    ir_key_id_t key_pressed = infrared_decode();
+
     memset(led_color, 0, sizeof(led_color));
 
-    if (led_effect != LED_EFFECT_REM_CONTROL) {
-        if (infrared_decode() == INFRARED_KEY_ENTER) {
-            led_effect = LED_EFFECT_REM_CONTROL;
+    if (ir_read_cooldown > 0) {
+        ir_read_cooldown--;
+    }
+
+    if (key_pressed == INFRARED_KEY_RIGHT && ir_read_cooldown == 0) {
+        if (led_effect == LED_EFFECT_XMAS) {
+            led_effect = LED_EFFECT_RED;
+        } else {
+            led_effect++;
+        }
+
+        ir_read_cooldown = LED_CONTROL_DELAY;
+
+    } else if (key_pressed == INFRARED_KEY_LEFT && ir_read_cooldown == 0) {
+        if (led_effect == LED_EFFECT_RED) {
+            led_effect = LED_EFFECT_XMAS;
+        } else {
+            led_effect--;
+        }
+
+        ir_read_cooldown = LED_CONTROL_DELAY;
+
+    } else if (key_pressed == INFRARED_KEY_UP) {
+        led_bright += LED_CONTROL_BRIGHT_STEP;
+        if (led_bright > LED_WS2812_COLOR_MAX) {
+            led_bright = LED_WS2812_COLOR_MAX;
+        }
+
+    } else if (key_pressed == INFRARED_KEY_DOWN) {
+        led_bright -= LED_CONTROL_BRIGHT_STEP;
+        if (led_bright < 0) {
+            led_bright = 0;
         }
     }
 
     switch (led_effect) {
-        case LED_EFFECT_FADE: {
-            if (led_effect_fade() == true) {
-                led_effect = LED_EFFECT_SNAKE;
-            }
+        case LED_EFFECT_RED:
+        case LED_EFFECT_GREEN:
+        case LED_EFFECT_BLUE:
+        case LED_EFFECT_YELLOW:
+        case LED_EFFECT_MAGENTA:
+        case LED_EFFECT_CYAN:
+        case LED_EFFECT_WHITE: {
+            led_effect_color(led_effect);
             break;
         }
-        case LED_EFFECT_SNAKE: {
-            if (led_effect_snake() == true) {
-                led_effect = LED_EFFECT_FADE;
-            }
-            break;
-        }
-        case LED_EFFECT_REM_CONTROL: {
-            if (led_effect_rem_control() == true) {
-                led_effect = LED_EFFECT_FADE;
-            }
-            break;
-        }
-        default: {
+        case LED_EFFECT_XMAS: {
+            led_effect_xmas();
             break;
         }
     }
@@ -162,11 +191,79 @@ static void led_update(void) {
 }
 
 /**
+ * @brief Updates LEDs with a fixed color.
+ * 
+ * @param effect    Effect to update.
+ */
+static void led_effect_color(led_effect_t effect) {
+    uint32_t i = 0;
+
+    for (i = 0; i < LED_WS2812_NR; i++) {
+        switch (led_effect) {
+            case LED_EFFECT_RED: {
+                led_color[i] = LED_WS2812_GET_R(led_bright);
+                break;
+            }
+            case LED_EFFECT_GREEN: {
+                led_color[i] = LED_WS2812_GET_G(led_bright);
+                break;
+            }
+            case LED_EFFECT_BLUE: {
+                led_color[i] = LED_WS2812_GET_B(led_bright);
+                break;
+            }
+            case LED_EFFECT_YELLOW: {
+                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_G(led_bright);
+                break;
+            }
+            case LED_EFFECT_MAGENTA: {
+                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_B(led_bright);
+                break;
+            }
+            case LED_EFFECT_CYAN: {
+                led_color[i] = LED_WS2812_GET_G(led_bright) | LED_WS2812_GET_B(led_bright);
+                break;
+            }
+            case LED_EFFECT_WHITE: {
+                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_G(led_bright) | LED_WS2812_GET_B(led_bright);;
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+}
+
+/**
+ * @brief Christmas light effect.
+ */
+static void led_effect_xmas(void) {
+    switch (led_xmas_state) {
+        case LED_XMAS_FADE: {
+            if (led_xmas_fade() == true) {
+                led_xmas_state = LED_XMAS_SNAKE;
+            }
+            break;
+        }
+        case LED_XMAS_SNAKE: {
+            if (led_xmas_snake() == true) {
+                led_xmas_state = LED_XMAS_FADE;
+            }
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+}
+
+/**
  * @brief Updates LED strip with fade effect.
  * 
  * @return true when the effect is finished
  */
-static bool led_effect_fade(void) {
+static bool led_xmas_fade(void) {
     bool effect_finish = false;
     uint32_t bright_step = 0;
     uint32_t i = 0;
@@ -267,7 +364,7 @@ static bool led_effect_fade(void) {
  * 
  * @return true when the effect is finished
  */
-static bool led_effect_snake(void) {
+static bool led_xmas_snake(void) {
     static uint32_t time_counter = 0;
     bool effect_finish = false;
     int32_t i = 0;
@@ -310,97 +407,6 @@ static bool led_effect_snake(void) {
     }
 
     return effect_finish;
-}
-
-/**
- * @brief Updates LED strip with remote control commands.
- * 
- * @return true when the effect is finished
- */
-static bool led_effect_rem_control(void) {
-    static led_rem_control_state_t led_rem_control_state = LED_REM_CONTROL_RED;
-    static uint32_t ir_read_cooldown = 0;
-    static int32_t led_bright = 0;
-    bool finish_effect = false;
-    uint32_t i = 0;
-    ir_key_id_t key_pressed = infrared_decode();
-
-    if (ir_read_cooldown > 0) {
-        ir_read_cooldown--;
-    }
-
-    // Checks for remote control commands
-    if (key_pressed == INFRARED_KEY_ESC) {
-        finish_effect = true;
-
-    } else if (key_pressed == INFRARED_KEY_RIGHT && ir_read_cooldown == 0) {
-        led_rem_control_state++;
-        if (led_rem_control_state > LED_REM_CONTROL_WHITE) {
-            led_rem_control_state = LED_REM_CONTROL_RED;
-        }
-        ir_read_cooldown = LED_REM_CONTROL_DELAY;
-
-    } else if (key_pressed == INFRARED_KEY_LEFT && ir_read_cooldown == 0) {
-        if (led_rem_control_state == LED_REM_CONTROL_RED) {
-            led_rem_control_state = LED_REM_CONTROL_WHITE;
-
-        } else {
-            led_rem_control_state--;
-        }
-
-        ir_read_cooldown = LED_REM_CONTROL_DELAY;
-
-    } else if (key_pressed == INFRARED_KEY_UP) {
-        led_bright += LED_REM_CONTROL_STEP;
-        if (led_bright > LED_WS2812_COLOR_MAX) {
-            led_bright = LED_WS2812_COLOR_MAX;
-        }
-
-    } else if (key_pressed == INFRARED_KEY_DOWN) {
-        led_bright -= LED_REM_CONTROL_STEP;
-        if (led_bright < 0) {
-            led_bright = 0;
-        }
-    }
-
-    // Updates the LEDs
-    for (i = 0; i < LED_WS2812_NR; i++) {
-        switch (led_rem_control_state) {
-            case LED_REM_CONTROL_RED: {
-                led_color[i] = LED_WS2812_GET_R(led_bright);
-                break;
-            }
-            case LED_REM_CONTROL_GREEN: {
-                led_color[i] = LED_WS2812_GET_G(led_bright);
-                break;
-            }
-            case LED_REM_CONTROL_BLUE: {
-                led_color[i] = LED_WS2812_GET_B(led_bright);
-                break;
-            }
-            case LED_REM_CONTROL_YELLOW: {
-                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_G(led_bright);
-                break;
-            }
-            case LED_REM_CONTROL_MAGENTA: {
-                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_B(led_bright);
-                break;
-            }
-            case LED_REM_CONTROL_CYAN: {
-                led_color[i] = LED_WS2812_GET_G(led_bright) | LED_WS2812_GET_B(led_bright);
-                break;
-            }
-            case LED_REM_CONTROL_WHITE: {
-                led_color[i] = LED_WS2812_GET_R(led_bright) | LED_WS2812_GET_G(led_bright) | LED_WS2812_GET_B(led_bright);;
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    }
-
-    return finish_effect;
 }
 
 /**
