@@ -20,7 +20,7 @@
 #define LED_WS2812_PORT         GPIO_PORTB
 #define LED_WS2812_PIN          1
 #define LED_WS2812_TIMER        TIMER_3
-#define LED_WS2812_PWM_CH       TIMER_PWM_CH_4
+#define LED_WS2812_PWM_CH       TIMER_CH_4
 /** @} */
 
 #if !defined (LED_WS2812_NR)

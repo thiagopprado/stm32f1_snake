@@ -91,22 +91,22 @@ void led_ws2812_setup(void) {
 
     // Enable compare channel DMA request
     switch (LED_WS2812_PWM_CH) {
-        case TIMER_PWM_CH_1: {
+        case TIMER_CH_1: {
             timer_ptr->DIER |= TIM_DIER_CC1DE;
             DMA1_Channel3->CPAR = (uint32_t)&(timer_ptr->CCR1);
             break;
         }
-        case TIMER_PWM_CH_2: {
+        case TIMER_CH_2: {
             timer_ptr->DIER |= TIM_DIER_CC2DE;
             DMA1_Channel3->CPAR = (uint32_t)&(timer_ptr->CCR2);
             break;
         }
-        case TIMER_PWM_CH_3: {
+        case TIMER_CH_3: {
             timer_ptr->DIER |= TIM_DIER_CC3DE;
             DMA1_Channel3->CPAR = (uint32_t)&(timer_ptr->CCR3);
             break;
         }
-        case TIMER_PWM_CH_4: {
+        case TIMER_CH_4: {
             timer_ptr->DIER |= TIM_DIER_CC4DE;
             DMA1_Channel3->CPAR = (uint32_t)&(timer_ptr->CCR4);
             break;

@@ -116,10 +116,10 @@ void timer_attach_callback(timer_idx_t timer, timer_callback_t callback) {
  * @param timer     Timer index.
  * @param pwm_ch    PWM channel.
  */
-void timer_pwm_setup(timer_idx_t timer, timer_pwm_ch_t pwm_ch) {
+void timer_pwm_setup(timer_idx_t timer, timer_ch_t pwm_ch) {
     TIM_TypeDef *timer_ptr = timer_get_ptr(timer);
 
-    if (timer_ptr == NULL || pwm_ch >= TIMER_PWM_CH_NR) {
+    if (timer_ptr == NULL || pwm_ch >= TIMER_CH_NR) {
         return;
     }
 
@@ -128,25 +128,25 @@ void timer_pwm_setup(timer_idx_t timer, timer_pwm_ch_t pwm_ch) {
     timer_ptr->CR1 |= TIM_CR1_ARPE;
 
     switch (pwm_ch) {
-        case TIMER_PWM_CH_1: {
+        case TIMER_CH_1: {
             timer_ptr->CCMR1 |= TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1PE; // PWM mode 1
             timer_ptr->CCER |= TIM_CCER_CC1E;
             timer_ptr->CCR1 = 0;
             break;
         }
-        case TIMER_PWM_CH_2: {
+        case TIMER_CH_2: {
             timer_ptr->CCMR1 |= TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2PE; // PWM mode 1
             timer_ptr->CCER |= TIM_CCER_CC2E;
             timer_ptr->CCR2 = 0;
             break;
         }
-        case TIMER_PWM_CH_3: {
+        case TIMER_CH_3: {
             timer_ptr->CCMR2 |= TIM_CCMR2_OC3M_2 | TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3PE; // PWM mode 1
             timer_ptr->CCER |= TIM_CCER_CC3E;
             timer_ptr->CCR3 = 0;
             break;
         }
-        case TIMER_PWM_CH_4: {
+        case TIMER_CH_4: {
             timer_ptr->CCMR2 |= TIM_CCMR2_OC4M_2 | TIM_CCMR2_OC4M_1 | TIM_CCMR2_OC4PE; // PWM mode 1
             timer_ptr->CCER |= TIM_CCER_CC4E;
             timer_ptr->CCR4 = 0;
@@ -170,7 +170,7 @@ void timer_pwm_setup(timer_idx_t timer, timer_pwm_ch_t pwm_ch) {
  * 
  * Duty cycle is defined as CCR / ARR.
  */
-void timer_pwm_set_duty(timer_idx_t timer, timer_pwm_ch_t pwm_ch, uint32_t ccr) {
+void timer_pwm_set_duty(timer_idx_t timer, timer_ch_t pwm_ch, uint32_t ccr) {
     TIM_TypeDef *timer_ptr = timer_get_ptr(timer);
 
     if (timer_ptr == NULL) {
@@ -178,19 +178,19 @@ void timer_pwm_set_duty(timer_idx_t timer, timer_pwm_ch_t pwm_ch, uint32_t ccr) 
     }
 
     switch (pwm_ch) {
-        case TIMER_PWM_CH_1: {
+        case TIMER_CH_1: {
             timer_ptr->CCR1 = ccr;
             break;
         }
-        case TIMER_PWM_CH_2: {
+        case TIMER_CH_2: {
             timer_ptr->CCR2 = ccr;
             break;
         }
-        case TIMER_PWM_CH_3: {
+        case TIMER_CH_3: {
             timer_ptr->CCR3 = ccr;
             break;
         }
-        case TIMER_PWM_CH_4: {
+        case TIMER_CH_4: {
             timer_ptr->CCR4 = ccr;
             break;
         }

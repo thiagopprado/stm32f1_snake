@@ -23,7 +23,7 @@
 #endif
 
 #if !defined(BUZZER_PWM_CH)
-    #define BUZZER_PWM_CH   TIMER_PWM_CH_4
+    #define BUZZER_PWM_CH   TIMER_CH_4
 #endif
 
 typedef enum {
