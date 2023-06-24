@@ -83,6 +83,7 @@ typedef enum {
     LED_EFFECT_YELLOW,
     LED_EFFECT_MAGENTA,
     LED_EFFECT_CYAN,
+    LED_EFFECT_RED_BLUE,
     LED_EFFECT_WHITE,
     LED_EFFECT_XMAS,
 } led_effect_t;
@@ -203,6 +204,7 @@ static void led_update(void) {
         case LED_EFFECT_YELLOW:
         case LED_EFFECT_MAGENTA:
         case LED_EFFECT_CYAN:
+        case LED_EFFECT_RED_BLUE:
         case LED_EFFECT_WHITE: {
             led_effect_color(led_effect);
             break;
@@ -278,6 +280,14 @@ static void led_effect_color(led_effect_t effect) {
             }
             case LED_EFFECT_CYAN: {
                 led_color[i] = LED_WS2812_GET_G(color_bright) | LED_WS2812_GET_B(color_bright);
+                break;
+            }
+            case LED_EFFECT_RED_BLUE: {
+                if (i >= (LED_WS2812_NR / 3) && i < ((LED_WS2812_NR * 2) / 3)) {
+                    led_color[i] = LED_WS2812_GET_G(color_bright / 10) | LED_WS2812_GET_B(color_bright);
+                } else {
+                    led_color[i] = LED_WS2812_GET_R(color_bright) | LED_WS2812_GET_B(color_bright / 20);
+                }
                 break;
             }
             case LED_EFFECT_WHITE: {
