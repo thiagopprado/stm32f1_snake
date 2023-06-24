@@ -13,6 +13,7 @@
 #include "core_cm3.h"
 
 timer_callback_t timer_callback[TIMER_NR] = { NULL };
+timer_callback_t input_capture_callback[TIMER_NR][TIMER_CH_NR] = { NULL };
 
 /**
  * @ingroup timer
@@ -69,7 +70,7 @@ void timer_update_psc(timer_idx_t timer, uint32_t psc, uint32_t arr) {
 
 /**
  * @ingroup timer
- * @brief Attach a callback function to timer 1 ISR.
+ * @brief Attach a callback function to timer ISR.
  */
 void timer_attach_callback(timer_idx_t timer, timer_callback_t callback) {
     TIM_TypeDef *timer_ptr = timer_get_ptr(timer);
@@ -201,6 +202,108 @@ void timer_pwm_set_duty(timer_idx_t timer, timer_ch_t pwm_ch, uint32_t ccr) {
 }
 
 /**
+ * @ingroup timer
+ * @brief Sets up Input Capture.
+ * 
+ * @param timer             Timer index.
+ * @param input_capture_ch  Input Capture channel.
+ */
+void timer_input_capture_setup(timer_idx_t timer, timer_ch_t input_capture_ch) {
+    TIM_TypeDef *timer_ptr = timer_get_ptr(timer);
+
+    if (timer_ptr == NULL || input_capture_ch >= TIMER_CH_NR) {
+        return;
+    }
+
+    switch (input_capture_ch) {
+        case TIMER_CH_1: {
+            timer_ptr->CCMR1 |= TIM_CCMR1_CC1S_0;
+            timer_ptr->CCER |= TIM_CCER_CC1E;
+            break;
+        }
+        case TIMER_CH_2: {
+            timer_ptr->CCMR1 |= TIM_CCMR1_CC2S_0;
+            timer_ptr->CCER |= TIM_CCER_CC2E;
+            break;
+        }
+        case TIMER_CH_3: {
+            timer_ptr->CCMR2 |= TIM_CCMR2_CC3S_0;
+            timer_ptr->CCER |= TIM_CCER_CC3E;
+            break;
+        }
+        case TIMER_CH_4: {
+            timer_ptr->CCMR2 |= TIM_CCMR2_CC4S_0;
+            timer_ptr->CCER |= TIM_CCER_CC4E;
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+
+
+    timer_ptr->DIER |= TIM_DIER_CC1IE;
+}
+
+/**
+ * @ingroup timer
+ * @brief Attach a callback function to input capture ISR.
+ */
+void timer_attach_input_capture_callback(timer_idx_t timer, timer_ch_t input_capture_ch, timer_callback_t callback) {
+    TIM_TypeDef *timer_ptr = timer_get_ptr(timer);
+    IRQn_Type irqn = 0;
+
+    switch (input_capture_ch) {
+        case TIMER_CH_1: {
+            timer_ptr->DIER |= TIM_DIER_CC1IE;
+            break;
+        }
+        case TIMER_CH_2: {
+            timer_ptr->DIER |= TIM_DIER_CC2IE;
+            break;
+        }
+        case TIMER_CH_3: {
+            timer_ptr->DIER |= TIM_DIER_CC3IE;
+            break;
+        }
+        case TIMER_CH_4: {
+            timer_ptr->DIER |= TIM_DIER_CC4IE;
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+
+    switch (timer) {
+        case TIMER_1: {
+            irqn = TIM1_UP_IRQn;
+            break;
+        }
+        case TIMER_2: {
+            irqn = TIM2_IRQn;
+            break;
+        }
+        case TIMER_3: {
+            irqn = TIM3_IRQn;
+            break;
+        }
+        case TIMER_4: {
+            irqn = TIM4_IRQn;
+            break;
+        }
+        default: {
+            return;
+        }
+    }
+
+    NVIC_EnableIRQ(irqn);
+    NVIC_SetPriority(irqn, 0);
+
+    input_capture_callback[timer][input_capture_ch] = callback;
+}
+
+/**
  * @brief Gets the timer structure pointer.
  * 
  * @param timer     Timer index.
@@ -242,10 +345,49 @@ TIM_TypeDef* timer_get_ptr(timer_idx_t timer) {
 void TIM1_UP_IRQHandler(void) {
     NVIC_ClearPendingIRQ(TIM1_UP_IRQn);
 
-    TIM1->SR &= ~(TIM_SR_UIF); // UIF bit (interrupt flag)
+    if ((TIM1->SR & TIM_SR_UIF) != 0) {
+        // UIF bit (interrupt flag)
+        TIM1->SR &= ~(TIM_SR_UIF);
 
-    if (timer_callback[TIMER_1] != NULL) {
-        timer_callback[TIMER_1]();
+        if (timer_callback[TIMER_1] != NULL) {
+            timer_callback[TIMER_1]();
+        }
+    }
+
+    if ((TIM1->SR & TIM_SR_CC1IF) != 0) {
+        // CC1IF bit (interrupt flag)
+        TIM1->SR &= ~(TIM_SR_CC1IF);
+
+        if (input_capture_callback[TIMER_1][TIMER_CH_1] != NULL) {
+            input_capture_callback[TIMER_1][TIMER_CH_1]();
+        }
+    }
+
+    if ((TIM1->SR & TIM_SR_CC2IF) != 0) {
+        // CC2IF bit (interrupt flag)
+        TIM1->SR &= ~(TIM_SR_CC2IF);
+
+        if (input_capture_callback[TIMER_1][TIMER_CH_2] != NULL) {
+            input_capture_callback[TIMER_1][TIMER_CH_2]();
+        }
+    }
+
+    if ((TIM1->SR & TIM_SR_CC3IF) != 0) {
+        // CC3IF bit (interrupt flag)
+        TIM1->SR &= ~(TIM_SR_CC3IF);
+
+        if (input_capture_callback[TIMER_1][TIMER_CH_3] != NULL) {
+            input_capture_callback[TIMER_1][TIMER_CH_3]();
+        }
+    }
+
+    if ((TIM1->SR & TIM_SR_CC4IF) != 0) {
+        // CC4IF bit (interrupt flag)
+        TIM1->SR &= ~(TIM_SR_CC4IF);
+
+        if (input_capture_callback[TIMER_1][TIMER_CH_4] != NULL) {
+            input_capture_callback[TIMER_1][TIMER_CH_4]();
+        }
     }
 }
 
@@ -256,10 +398,49 @@ void TIM1_UP_IRQHandler(void) {
 void TIM2_IRQHandler(void) {
     NVIC_ClearPendingIRQ(TIM2_IRQn);
 
-    TIM2->SR &= ~(TIM_SR_UIF); // UIF bit (interrupt flag)
+    if ((TIM2->SR & TIM_SR_UIF) != 0) {
+        // UIF bit (interrupt flag)
+        TIM2->SR &= ~(TIM_SR_UIF);
 
-    if (timer_callback[TIMER_2] != NULL) {
-        timer_callback[TIMER_2]();
+        if (timer_callback[TIMER_2] != NULL) {
+            timer_callback[TIMER_2]();
+        }
+    }
+
+    if ((TIM2->SR & TIM_SR_CC1IF) != 0) {
+        // CC1IF bit (interrupt flag)
+        TIM2->SR &= ~(TIM_SR_CC1IF);
+
+        if (input_capture_callback[TIMER_2][TIMER_CH_1] != NULL) {
+            input_capture_callback[TIMER_2][TIMER_CH_1]();
+        }
+    }
+
+    if ((TIM2->SR & TIM_SR_CC2IF) != 0) {
+        // CC2IF bit (interrupt flag)
+        TIM2->SR &= ~(TIM_SR_CC2IF);
+
+        if (input_capture_callback[TIMER_2][TIMER_CH_2] != NULL) {
+            input_capture_callback[TIMER_2][TIMER_CH_2]();
+        }
+    }
+
+    if ((TIM2->SR & TIM_SR_CC3IF) != 0) {
+        // CC3IF bit (interrupt flag)
+        TIM2->SR &= ~(TIM_SR_CC3IF);
+
+        if (input_capture_callback[TIMER_2][TIMER_CH_3] != NULL) {
+            input_capture_callback[TIMER_2][TIMER_CH_3]();
+        }
+    }
+
+    if ((TIM2->SR & TIM_SR_CC4IF) != 0) {
+        // CC4IF bit (interrupt flag)
+        TIM2->SR &= ~(TIM_SR_CC4IF);
+
+        if (input_capture_callback[TIMER_2][TIMER_CH_4] != NULL) {
+            input_capture_callback[TIMER_2][TIMER_CH_4]();
+        }
     }
 }
 
@@ -270,10 +451,49 @@ void TIM2_IRQHandler(void) {
 void TIM3_IRQHandler(void) {
     NVIC_ClearPendingIRQ(TIM3_IRQn);
 
-    TIM3->SR &= ~(TIM_SR_UIF); // UIF bit (interrupt flag)
+    if ((TIM3->SR & TIM_SR_UIF) != 0) {
+        // UIF bit (interrupt flag)
+        TIM3->SR &= ~(TIM_SR_UIF);
 
-    if (timer_callback[TIMER_3] != NULL) {
-        timer_callback[TIMER_3]();
+        if (timer_callback[TIMER_3] != NULL) {
+            timer_callback[TIMER_3]();
+        }
+    }
+
+    if ((TIM3->SR & TIM_SR_CC1IF) != 0) {
+        // CC1IF bit (interrupt flag)
+        TIM3->SR &= ~(TIM_SR_CC1IF);
+
+        if (input_capture_callback[TIMER_3][TIMER_CH_1] != NULL) {
+            input_capture_callback[TIMER_3][TIMER_CH_1]();
+        }
+    }
+
+    if ((TIM3->SR & TIM_SR_CC2IF) != 0) {
+        // CC2IF bit (interrupt flag)
+        TIM3->SR &= ~(TIM_SR_CC2IF);
+
+        if (input_capture_callback[TIMER_3][TIMER_CH_2] != NULL) {
+            input_capture_callback[TIMER_3][TIMER_CH_2]();
+        }
+    }
+
+    if ((TIM3->SR & TIM_SR_CC3IF) != 0) {
+        // CC3IF bit (interrupt flag)
+        TIM3->SR &= ~(TIM_SR_CC3IF);
+
+        if (input_capture_callback[TIMER_3][TIMER_CH_3] != NULL) {
+            input_capture_callback[TIMER_3][TIMER_CH_3]();
+        }
+    }
+
+    if ((TIM3->SR & TIM_SR_CC4IF) != 0) {
+        // CC4IF bit (interrupt flag)
+        TIM3->SR &= ~(TIM_SR_CC4IF);
+
+        if (input_capture_callback[TIMER_3][TIMER_CH_4] != NULL) {
+            input_capture_callback[TIMER_3][TIMER_CH_4]();
+        }
     }
 }
 
@@ -285,9 +505,48 @@ void TIM3_IRQHandler(void) {
 void TIM4_IRQHandler(void) {
     NVIC_ClearPendingIRQ(TIM4_IRQn);
 
-    TIM4->SR &= ~(TIM_SR_UIF); // UIF bit (interrupt flag)
+    if ((TIM4->SR & TIM_SR_UIF) != 0) {
+        // UIF bit (interrupt flag)
+        TIM4->SR &= ~(TIM_SR_UIF);
 
-    if (timer_callback[TIMER_4] != NULL) {
-        timer_callback[TIMER_4]();
+        if (timer_callback[TIMER_4] != NULL) {
+            timer_callback[TIMER_4]();
+        }
+    }
+
+    if ((TIM4->SR & TIM_SR_CC1IF) != 0) {
+        // CC1IF bit (interrupt flag)
+        TIM4->SR &= ~(TIM_SR_CC1IF);
+
+        if (input_capture_callback[TIMER_4][TIMER_CH_1] != NULL) {
+            input_capture_callback[TIMER_4][TIMER_CH_1]();
+        }
+    }
+
+    if ((TIM4->SR & TIM_SR_CC2IF) != 0) {
+        // CC2IF bit (interrupt flag)
+        TIM4->SR &= ~(TIM_SR_CC2IF);
+
+        if (input_capture_callback[TIMER_4][TIMER_CH_2] != NULL) {
+            input_capture_callback[TIMER_4][TIMER_CH_2]();
+        }
+    }
+
+    if ((TIM4->SR & TIM_SR_CC3IF) != 0) {
+        // CC3IF bit (interrupt flag)
+        TIM4->SR &= ~(TIM_SR_CC3IF);
+
+        if (input_capture_callback[TIMER_4][TIMER_CH_3] != NULL) {
+            input_capture_callback[TIMER_4][TIMER_CH_3]();
+        }
+    }
+
+    if ((TIM4->SR & TIM_SR_CC4IF) != 0) {
+        // CC4IF bit (interrupt flag)
+        TIM4->SR &= ~(TIM_SR_CC4IF);
+
+        if (input_capture_callback[TIMER_4][TIMER_CH_4] != NULL) {
+            input_capture_callback[TIMER_4][TIMER_CH_4]();
+        }
     }
 }
