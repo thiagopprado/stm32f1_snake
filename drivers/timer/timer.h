@@ -19,6 +19,7 @@ typedef enum {
     TIMER_1 = 0,
     TIMER_2,
     TIMER_3,
+    TIMER_4,
     TIMER_NR,
 } timer_idx_t;
 

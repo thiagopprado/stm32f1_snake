@@ -38,6 +38,10 @@ void timer_setup(timer_idx_t timer, uint32_t psc, uint32_t arr) {
             RCC->APB1ENR |= RCC_APB1ENR_TIM3EN; // Enable Timer 3 clock
             break;
         }
+        case TIMER_4: {
+            RCC->APB1ENR |= RCC_APB1ENR_TIM4EN; // Enable Timer 4 clock
+            break;
+        }
         default: {
             return;
         }
@@ -85,6 +89,11 @@ void timer_attach_callback(timer_idx_t timer, timer_callback_t callback) {
         case TIMER_3: {
             RCC->APB1ENR |= RCC_APB1ENR_TIM3EN; // Enable Timer 3 clock
             irqn = TIM3_IRQn;
+            break;
+        }
+        case TIMER_4: {
+            RCC->APB1ENR |= RCC_APB1ENR_TIM4EN; // Enable Timer 4 clock
+            irqn = TIM4_IRQn;
             break;
         }
         default: {
@@ -214,6 +223,10 @@ TIM_TypeDef* timer_get_ptr(timer_idx_t timer) {
             timer_ptr = TIM3;
             break;
         }
+        case TIMER_4: {
+            timer_ptr = TIM4;
+            break;
+        }
         default: {
             break;
         }
@@ -261,5 +274,20 @@ void TIM3_IRQHandler(void) {
 
     if (timer_callback[TIMER_3] != NULL) {
         timer_callback[TIMER_3]();
+    }
+}
+
+
+/**
+ * @ingroup timer
+ * @brief Timer 4 ISR.
+ */
+void TIM4_IRQHandler(void) {
+    NVIC_ClearPendingIRQ(TIM4_IRQn);
+
+    TIM4->SR &= ~(TIM_SR_UIF); // UIF bit (interrupt flag)
+
+    if (timer_callback[TIMER_4] != NULL) {
+        timer_callback[TIMER_4]();
     }
 }
