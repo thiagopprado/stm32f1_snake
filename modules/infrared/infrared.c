@@ -77,11 +77,9 @@ typedef enum {
     IR_RC6_STATE_START_2,
     IR_RC6_STATE_START_3,
     IR_RC6_STATE_READ_FIELD_WAIT,
-    IR_RC6_STATE_READ_FIELD_GET,
     IR_RC6_STATE_READ_TOGGLE_1,
     IR_RC6_STATE_READ_TOGGLE_2,
     IR_RC6_STATE_READ_GET,
-    IR_RC6_STATE_READ_WAIT,
 } infrared_rc6_state_t;
 
 typedef struct {
@@ -97,24 +95,28 @@ typedef struct {
     infrared_rc6_state_t state;
     uint16_t value;
     uint16_t new_value;
-    uint16_t read_counter;
     uint8_t bit_idx;
     uint8_t field_bits_nr;
-    bool last_pin_value;
+    bool transition_ctrl;
+    uint16_t last_timeshot;
 } infrared_rc6_ctrl_t;
 
 static infrared_nec_ctrl_t nec_ctrl;
 static infrared_rc6_ctrl_t rc6_ctrl;
 
-static void infrared_nec_read(void);
-static void infrared_rc6_read(void);
+static void infrared_nec_read(uint16_t timeshot);
+static void infrared_rc6_read(uint16_t timeshot);
+static void infrared_input_capture_callback(void);
 
 /**
  * @brief NEC state machine.
+ * 
+ * @param timeshot  Timestamp of the pin change.
  */
-static void infrared_nec_read(void) {
+static void infrared_nec_read(uint16_t timeshot) {
     bool new_pin_value = gpio_read(INFRARED_PORT, INFRARED_PIN);
 
+    // TODO: Update based on input capture edge detection
     nec_ctrl.read_counter++;
 
     switch (nec_ctrl.state) {
@@ -199,138 +201,121 @@ static void infrared_nec_read(void) {
 
 /**
  * @brief RC6 state machine.
+ * 
+ * @param timeshot  Timestamp of the pin change.
  */
-static void infrared_rc6_read(void) {
-    bool new_pin_value = gpio_read(INFRARED_PORT, INFRARED_PIN);
+static void infrared_rc6_read(uint16_t timeshot) {
+    uint16_t time_interval = timeshot - rc6_ctrl.last_timeshot;
+    bool pin_value = gpio_read(INFRARED_PORT, INFRARED_PIN);
 
-    rc6_ctrl.read_counter++;
+    rc6_ctrl.last_timeshot = timeshot;
+
+    if (time_interval > 100 && rc6_ctrl.state != IR_RC6_STATE_INIT) {
+        rc6_ctrl.state = IR_RC6_STATE_INIT;
+    }
 
     switch (rc6_ctrl.state) {
         case IR_RC6_STATE_INIT: {
-            if (rc6_ctrl.last_pin_value == true && new_pin_value == false) {
+            if (pin_value == false) {
                 rc6_ctrl.state = IR_RC6_STATE_START_1;
-                rc6_ctrl.read_counter = 0;
             }
 
             break;
         }
         case IR_RC6_STATE_START_1: {
-            if (rc6_ctrl.last_pin_value == false && new_pin_value == true) {
-                rc6_ctrl.state = IR_RC6_STATE_START_2;
-                rc6_ctrl.read_counter = 0;
-
-            } else if (rc6_ctrl.read_counter > IR_RC6_START_1_TIMEOUT) {
+            if (time_interval > IR_RC6_START_1_TIMEOUT) {
                 // Invalid start
                 rc6_ctrl.state = IR_RC6_STATE_INIT;
+            } else if (pin_value == true) {
+                rc6_ctrl.state = IR_RC6_STATE_START_2;
             }
 
             break;
         }
         case IR_RC6_STATE_START_2: {
-            if (rc6_ctrl.last_pin_value == true && new_pin_value == false) {
-                rc6_ctrl.state = IR_RC6_STATE_START_3;
-                rc6_ctrl.read_counter = 0;
-
-            } else if (rc6_ctrl.read_counter > IR_RC6_START_2_TIMEOUT) {
+            if (time_interval > IR_RC6_START_2_TIMEOUT) {
                 // Invalid start
                 rc6_ctrl.state = IR_RC6_STATE_INIT;
+            } else if (pin_value == false) {
+                rc6_ctrl.state = IR_RC6_STATE_START_3;
             }
 
             break;
         }
         case IR_RC6_STATE_START_3: {
-            if (rc6_ctrl.last_pin_value == false && new_pin_value == true) {
-                rc6_ctrl.state = IR_RC6_STATE_READ_FIELD_WAIT;
-                rc6_ctrl.read_counter = 0;
-
-            } else if (rc6_ctrl.read_counter > IR_RC6_HALF_BIT_TIMEOUT) {
+            if (time_interval > IR_RC6_HALF_BIT_TIMEOUT) {
                 // Invalid start
                 rc6_ctrl.state = IR_RC6_STATE_INIT;
+            } else if (pin_value == true) {
+                rc6_ctrl.state = IR_RC6_STATE_READ_FIELD_WAIT;
+                rc6_ctrl.transition_ctrl = false;
             }
 
             break;
         }
         case IR_RC6_STATE_READ_FIELD_WAIT: {
-            if (rc6_ctrl.read_counter > IR_RC6_HALF_BIT_TIMEOUT) {
-                rc6_ctrl.state = IR_RC6_STATE_READ_FIELD_GET;
-                rc6_ctrl.read_counter = 0;
-            }
+            if (time_interval > IR_RC6_BIT_TIMEOUT) {
+                // Invalid field
+                rc6_ctrl.state = IR_RC6_STATE_INIT;
+                rc6_ctrl.field_bits_nr = 0;
 
-            break;
-        }
-        case IR_RC6_STATE_READ_FIELD_GET: {
-            if (rc6_ctrl.last_pin_value != new_pin_value) {
+            } else if (time_interval > IR_RC6_HALF_BIT_TIMEOUT || rc6_ctrl.transition_ctrl == true) {
                 rc6_ctrl.field_bits_nr++;
                 if (rc6_ctrl.field_bits_nr == IR_RC6_FIELD_BIT_NR) {
                     rc6_ctrl.field_bits_nr = 0;
                     rc6_ctrl.state = IR_RC6_STATE_READ_TOGGLE_1;
-                } else {
-                    rc6_ctrl.state = IR_RC6_STATE_READ_FIELD_WAIT;
                 }
+                rc6_ctrl.transition_ctrl = false;
 
-                rc6_ctrl.read_counter = 0;
-
-            } else if (rc6_ctrl.read_counter > IR_RC6_BIT_TIMEOUT) {
-                // Invalid field
-                rc6_ctrl.state = IR_RC6_STATE_INIT;
-                rc6_ctrl.field_bits_nr = 0;
-                rc6_ctrl.read_counter = 0;
+            } else if (rc6_ctrl.transition_ctrl == false) {
+                rc6_ctrl.transition_ctrl = true;
             }
 
             break;
         }
         case IR_RC6_STATE_READ_TOGGLE_1: {
-            if (rc6_ctrl.last_pin_value != new_pin_value) {
-                rc6_ctrl.state = IR_RC6_STATE_READ_TOGGLE_2;
-                rc6_ctrl.read_counter = 0;
-
-            } else if (rc6_ctrl.read_counter > IR_RC6_TOGGLE_1_TIMEOUT) {
+            if (time_interval > IR_RC6_TOGGLE_1_TIMEOUT) {
                 // Invalid toggle
                 rc6_ctrl.state = IR_RC6_STATE_INIT;
-                rc6_ctrl.read_counter = 0;
+                rc6_ctrl.transition_ctrl = false;
+            } else if (time_interval <= IR_RC6_HALF_BIT_TIMEOUT && rc6_ctrl.transition_ctrl == false) {
+                rc6_ctrl.transition_ctrl = true;
+            } else {
+                rc6_ctrl.state = IR_RC6_STATE_READ_TOGGLE_2;
             }
 
             break;
         }
         case IR_RC6_STATE_READ_TOGGLE_2: {
-            if (rc6_ctrl.read_counter > IR_RC6_TOGGLE_2_TIMEOUT) {
-                rc6_ctrl.state = IR_RC6_STATE_READ_GET;
-                rc6_ctrl.bit_idx = 0;
-                rc6_ctrl.new_value = 0;
-                rc6_ctrl.read_counter = 0;
+            rc6_ctrl.state = IR_RC6_STATE_READ_GET;
+            rc6_ctrl.bit_idx = 0;
+            rc6_ctrl.new_value = 0;
+            if (time_interval < IR_RC6_TOGGLE_2_TIMEOUT) {
+                break;
+            } else {
+                time_interval = IR_RC6_BIT_TIMEOUT;
             }
-            break;
         }
         case IR_RC6_STATE_READ_GET: {
-            if (rc6_ctrl.last_pin_value != new_pin_value) {
-                if (new_pin_value == true) {
+            if (time_interval > IR_RC6_BIT_TIMEOUT) {
+                // Invalid bit
+                rc6_ctrl.state = IR_RC6_STATE_INIT;
+                rc6_ctrl.transition_ctrl = false;
+            } else if (time_interval <= IR_RC6_HALF_BIT_TIMEOUT && rc6_ctrl.transition_ctrl == false && rc6_ctrl.bit_idx != 0) {
+                rc6_ctrl.transition_ctrl = true;
+            } else {
+                if (pin_value == true) {
                     BIT_SET(rc6_ctrl.new_value, rc6_ctrl.bit_idx);
                 }
 
-                rc6_ctrl.state = IR_RC6_STATE_READ_WAIT;
-                rc6_ctrl.read_counter = 0;
-
-            } else if (rc6_ctrl.read_counter > IR_RC6_BIT_TIMEOUT) {
-                // Invalid bit
-                rc6_ctrl.state = IR_RC6_STATE_INIT;
-                rc6_ctrl.read_counter = 0;
-            }
-
-            break;
-        }
-        case IR_RC6_STATE_READ_WAIT: {
-            if (rc6_ctrl.read_counter > IR_RC6_HALF_BIT_TIMEOUT) {
                 rc6_ctrl.bit_idx++;
                 if (rc6_ctrl.bit_idx == IR_RC6_BIT_NR) {
                     rc6_ctrl.bit_idx = 0;
                     rc6_ctrl.state = IR_RC6_STATE_INIT;
                     rc6_ctrl.value = rc6_ctrl.new_value;
-
-                } else {
-                    rc6_ctrl.state = IR_RC6_STATE_READ_GET;
                 }
 
-                rc6_ctrl.read_counter = 0;
+                rc6_ctrl.transition_ctrl = false;
             }
 
             break;
@@ -339,28 +324,30 @@ static void infrared_rc6_read(void) {
             break;
         }
     }
-
-    rc6_ctrl.last_pin_value = new_pin_value;
 }
 
 /**
- * @brief Sets up infrared pin.
+ * @brief Input Capture callback.
+ */
+static void infrared_input_capture_callback(void) {
+    TIM_TypeDef *timer_ptr = timer_get_ptr(INFRARED_TIMER);
+
+    timer_ptr->CCER ^= TIM_CCER_CC1P; // Invert polarity
+    infrared_nec_read(timer_ptr->CCR1);
+    infrared_rc6_read(timer_ptr->CCR1);
+}
+
+/**
+ * @brief Sets up infrared pin and timer.
  */
 void infrared_setup(void) {
-    gpio_setup(INFRARED_PORT, INFRARED_PIN, GPIO_MODE_INPUT, GPIO_CFG_IN_FLOAT);
-
     memset(&nec_ctrl, 0, sizeof(infrared_nec_ctrl_t));
     memset(&rc6_ctrl, 0, sizeof(infrared_rc6_ctrl_t));
-}
 
-/**
- * @brief Updates the reading of the sensor.
- * 
- * @note Must be executed each 100us.
- */
-void infrared_update(void) {
-    infrared_nec_read();
-    infrared_rc6_read();
+    gpio_setup(INFRARED_PORT, INFRARED_PIN, GPIO_MODE_INPUT, GPIO_CFG_IN_FLOAT);
+    timer_setup(INFRARED_TIMER, 7199, 0xFFFF);
+    timer_input_capture_setup(INFRARED_TIMER, INFRARED_IC_CH);
+    timer_attach_input_capture_callback(INFRARED_TIMER, INFRARED_IC_CH, infrared_input_capture_callback);
 }
 
 /**

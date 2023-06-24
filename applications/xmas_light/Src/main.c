@@ -472,8 +472,6 @@ static bool led_xmas_snake(void) {
  */
 static void timer_callback(void) {
     timer_counter++;
-
-    infrared_update();
 }
 
 static bool timer_check_timeout(uint32_t timeshot, uint32_t timeout) {
