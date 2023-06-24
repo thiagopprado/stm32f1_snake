@@ -3,3 +3,4 @@
 **/Release
 **Release.cfg
 **/.vscode
+*.settings
