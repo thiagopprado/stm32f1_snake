@@ -86,9 +86,8 @@ typedef struct {
     infrared_nec_state_t state;
     uint32_t value;
     uint32_t new_value;
-    uint16_t read_counter;
     uint8_t bit_idx;
-    bool last_pin_value;
+    uint16_t last_timeshot;
 } infrared_nec_ctrl_t;
 
 typedef struct {
@@ -114,49 +113,46 @@ static void infrared_input_capture_callback(void);
  * @param timeshot  Timestamp of the pin change.
  */
 static void infrared_nec_read(uint16_t timeshot) {
-    bool new_pin_value = gpio_read(INFRARED_PORT, INFRARED_PIN);
+    uint16_t time_interval = timeshot - nec_ctrl.last_timeshot;
+    bool pin_value = gpio_read(INFRARED_PORT, INFRARED_PIN);
 
-    // TODO: Update based on input capture edge detection
-    nec_ctrl.read_counter++;
+    nec_ctrl.last_timeshot = timeshot;
 
     switch (nec_ctrl.state) {
         case IR_NEC_STATE_INIT: {
-            if (nec_ctrl.last_pin_value == true && new_pin_value == false) {
+            if (pin_value == false) {
                 nec_ctrl.state = IR_NEC_STATE_START;
-                nec_ctrl.read_counter = 0;
             }
 
             break;
         }
         case IR_NEC_STATE_START: {
-            if (nec_ctrl.last_pin_value == true && new_pin_value == false) {
+            if (time_interval > IR_NEC_START_TIMEOUT) {
+                nec_ctrl.state = IR_NEC_STATE_INIT;
+            } else if (pin_value == false) {
                 nec_ctrl.state = IR_NEC_STATE_READ_WAIT;
                 nec_ctrl.bit_idx = 0;
-                nec_ctrl.read_counter = 0;
                 nec_ctrl.new_value = 0;
-
-            } else if (nec_ctrl.read_counter > IR_NEC_START_TIMEOUT) {
-                nec_ctrl.state = IR_NEC_STATE_INIT;
-                nec_ctrl.read_counter = 0;
             }
 
             break;
         }
         case IR_NEC_STATE_READ_WAIT: {
-            if (new_pin_value == true) {
-                nec_ctrl.state = IR_NEC_STATE_READ_GET;
-                nec_ctrl.read_counter = 0;
-
-            } else if (nec_ctrl.read_counter > IR_NEC_BIT_BURST_TIMEOUT) {
+            if (time_interval > IR_NEC_BIT_BURST_TIMEOUT) {
                 // Invalid bit
                 nec_ctrl.state = IR_NEC_STATE_INIT;
+            } else if (pin_value == true) {
+                nec_ctrl.state = IR_NEC_STATE_READ_GET;
             }
 
             break;
         }
         case IR_NEC_STATE_READ_GET: {
-            if (new_pin_value == false) {
-                if (nec_ctrl.read_counter <= IR_NEC_BIT_LOW_TIMEOUT) {
+            if (time_interval > IR_NEC_BIT_TIMEOUT) {
+                // Invalid bit
+                nec_ctrl.state = IR_NEC_STATE_INIT;
+            } else if (pin_value == false) {
+                if (time_interval <= IR_NEC_BIT_LOW_TIMEOUT) {
                 	BIT_CLEAR(nec_ctrl.new_value, nec_ctrl.bit_idx);
                 } else {
                     BIT_SET(nec_ctrl.new_value, nec_ctrl.bit_idx);
@@ -169,24 +165,17 @@ static void infrared_nec_read(uint16_t timeshot) {
                 } else {
                     nec_ctrl.state = IR_NEC_STATE_READ_WAIT;
                 }
-
-                nec_ctrl.read_counter = 0;
-
-            } else if (nec_ctrl.read_counter > IR_NEC_BIT_TIMEOUT) {
-                // Invalid bit
-                nec_ctrl.state = IR_NEC_STATE_INIT;
             }
 
             break;
         }
         case IR_NEC_STATE_STOP: {
-            if (new_pin_value == true) {
-                nec_ctrl.state = IR_NEC_STATE_INIT;
-                nec_ctrl.value = nec_ctrl.new_value;
-
-            } else if (nec_ctrl.read_counter > IR_NEC_BIT_BURST_TIMEOUT) {
+            if (time_interval > IR_NEC_BIT_BURST_TIMEOUT) {
                 // Invalid bit
                 nec_ctrl.state = IR_NEC_STATE_INIT;
+            } else if (pin_value == true) {
+                nec_ctrl.state = IR_NEC_STATE_INIT;
+                nec_ctrl.value = nec_ctrl.new_value;
             }
 
             break;
@@ -195,8 +184,6 @@ static void infrared_nec_read(uint16_t timeshot) {
             break;
         }
     }
-
-    nec_ctrl.last_pin_value = new_pin_value;
 }
 
 /**
