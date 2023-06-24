@@ -330,11 +330,11 @@ static void infrared_rc6_read(uint16_t timeshot) {
  * @brief Input Capture callback.
  */
 static void infrared_input_capture_callback(void) {
-    TIM_TypeDef *timer_ptr = timer_get_ptr(INFRARED_TIMER);
+    uint16_t ic_timeshot = timer_get_input_capture_counter(INFRARED_TIMER, INFRARED_IC_CH);
 
-    timer_ptr->CCER ^= TIM_CCER_CC1P; // Invert polarity
-    infrared_nec_read(timer_ptr->CCR1);
-    infrared_rc6_read(timer_ptr->CCR1);
+    timer_invert_input_capture_polarity(INFRARED_TIMER, INFRARED_IC_CH);
+    infrared_nec_read(ic_timeshot);
+    infrared_rc6_read(ic_timeshot);
 }
 
 /**
@@ -347,6 +347,7 @@ void infrared_setup(void) {
     gpio_setup(INFRARED_PORT, INFRARED_PIN, GPIO_MODE_INPUT, GPIO_CFG_IN_FLOAT);
     timer_setup(INFRARED_TIMER, 7199, 0xFFFF);
     timer_input_capture_setup(INFRARED_TIMER, INFRARED_IC_CH);
+    timer_invert_input_capture_polarity(INFRARED_TIMER, INFRARED_IC_CH);
     timer_attach_input_capture_callback(INFRARED_TIMER, INFRARED_IC_CH, infrared_input_capture_callback);
 }
 

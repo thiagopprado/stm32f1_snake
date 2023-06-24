@@ -38,6 +38,8 @@ void timer_pwm_setup(timer_idx_t timer, timer_ch_t pwm_ch);
 void timer_pwm_set_duty(timer_idx_t timer, timer_ch_t pwm_ch, uint32_t ccr);
 void timer_input_capture_setup(timer_idx_t timer, timer_ch_t input_capture_ch);
 void timer_attach_input_capture_callback(timer_idx_t timer, timer_ch_t input_capture_ch, timer_callback_t callback);
+void timer_invert_input_capture_polarity(timer_idx_t timer, timer_ch_t input_capture_ch);
+uint16_t timer_get_input_capture_counter(timer_idx_t timer, timer_ch_t input_capture_ch);
 
 TIM_TypeDef* timer_get_ptr(timer_idx_t timer);
 

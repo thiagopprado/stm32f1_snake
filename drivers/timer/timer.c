@@ -304,6 +304,85 @@ void timer_attach_input_capture_callback(timer_idx_t timer, timer_ch_t input_cap
 }
 
 /**
+ * @brief Inverts Input Capture polarity.
+ * 
+ * @param timer             Timer index.
+ * @param input_capture_ch  Input Capture channel.
+ */
+void timer_invert_input_capture_polarity(timer_idx_t timer, timer_ch_t input_capture_ch)
+{
+    TIM_TypeDef *timer_ptr = timer_get_ptr(timer);
+
+    if (timer_ptr == NULL || input_capture_ch >= TIMER_CH_NR) {
+        return;
+    }
+
+    switch (input_capture_ch) {
+        case TIMER_CH_1: {
+            timer_ptr->CCER ^= TIM_CCER_CC1P;
+            break;
+        }
+        case TIMER_CH_2: {
+            timer_ptr->CCER ^= TIM_CCER_CC2P;
+            break;
+        }
+        case TIMER_CH_3: {
+            timer_ptr->CCER ^= TIM_CCER_CC3P;
+            break;
+        }
+        case TIMER_CH_4: {
+            timer_ptr->CCER ^= TIM_CCER_CC4P;
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+}
+
+/**
+ * @brief Gets the Input Capture counter.
+ * 
+ * @param timer             Timer index.
+ * @param input_capture_ch  Input Capture channel.
+ * 
+ * @return Input Capture counter.
+ */
+uint16_t timer_get_input_capture_counter(timer_idx_t timer, timer_ch_t input_capture_ch)
+{
+    TIM_TypeDef *timer_ptr = timer_get_ptr(timer);
+    uint16_t counter = 0;
+
+    if (timer_ptr == NULL || input_capture_ch >= TIMER_CH_NR) {
+        return counter;
+    }
+
+    switch (input_capture_ch) {
+        case TIMER_CH_1: {
+            counter = timer_ptr->CCR1;
+            break;
+        }
+        case TIMER_CH_2: {
+            counter = timer_ptr->CCR2;
+            break;
+        }
+        case TIMER_CH_3: {
+            counter = timer_ptr->CCR3;
+            break;
+        }
+        case TIMER_CH_4: {
+            counter = timer_ptr->CCR4;
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+
+    return counter;
+}
+
+/**
  * @brief Gets the timer structure pointer.
  * 
  * @param timer     Timer index.
