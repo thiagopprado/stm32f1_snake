@@ -240,7 +240,7 @@ void TIM1_UP_IRQHandler(void) {
  * @ingroup timer
  * @brief Timer 2 ISR.
  */
-void TIM2_UP_IRQHandler(void) {
+void TIM2_IRQHandler(void) {
     NVIC_ClearPendingIRQ(TIM2_IRQn);
 
     TIM2->SR &= ~(TIM_SR_UIF); // UIF bit (interrupt flag)
@@ -254,7 +254,7 @@ void TIM2_UP_IRQHandler(void) {
  * @ingroup timer
  * @brief Timer 3 ISR.
  */
-void TIM3_UP_IRQHandler(void) {
+void TIM3_IRQHandler(void) {
     NVIC_ClearPendingIRQ(TIM3_IRQn);
 
     TIM3->SR &= ~(TIM_SR_UIF); // UIF bit (interrupt flag)
