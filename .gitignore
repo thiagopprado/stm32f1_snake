@@ -4,3 +4,4 @@
 **Release.cfg
 **/.vscode
 *.settings
+*.launch
