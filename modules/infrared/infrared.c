@@ -48,19 +48,12 @@
 #define IR_NEC_CODE_RIGHT           0xE0E046B9
 
 /** RC6 */
-#define IR_RC6_CODE_ENTER_1         0x3bff
-#define IR_RC6_CODE_ESC_1           0x5fff
-#define IR_RC6_CODE_UP_1            0x1bff
-#define IR_RC6_CODE_DOWN_1          0x9bff
-#define IR_RC6_CODE_LEFT_1          0x5bff
-#define IR_RC6_CODE_RIGHT_1         0xdbff
-
-#define IR_RC6_CODE_ENTER_2         0x3a00
-#define IR_RC6_CODE_ESC_2           0x5000
-#define IR_RC6_CODE_UP_2            0x1a00
-#define IR_RC6_CODE_DOWN_2          0x9a00
-#define IR_RC6_CODE_LEFT_2          0x5a00
-#define IR_RC6_CODE_RIGHT_2         0xda00
+#define IR_RC6_CODE_ENTER           0x3a00
+#define IR_RC6_CODE_ESC             0x5000
+#define IR_RC6_CODE_UP              0x1a00
+#define IR_RC6_CODE_DOWN            0x9a00
+#define IR_RC6_CODE_LEFT            0x5a00
+#define IR_RC6_CODE_RIGHT           0xda00
 /** @} */
 
 typedef enum {
@@ -381,17 +374,17 @@ ir_key_id_t infrared_decode(void) {
     uint32_t nec_read = infrared_read_nec();
     uint16_t rc6_read = infrared_read_rc6();
 
-    if (nec_read == IR_NEC_CODE_ENTER || rc6_read == IR_RC6_CODE_ENTER_1 || rc6_read == IR_RC6_CODE_ENTER_2) {
+    if (nec_read == IR_NEC_CODE_ENTER || rc6_read == IR_RC6_CODE_ENTER) {
         key_pressed = INFRARED_KEY_ENTER;
-    } else if (nec_read == IR_NEC_CODE_ESC || rc6_read == IR_RC6_CODE_ESC_1 || rc6_read == IR_RC6_CODE_ESC_2) {
+    } else if (nec_read == IR_NEC_CODE_ESC || rc6_read == IR_RC6_CODE_ESC) {
         key_pressed = INFRARED_KEY_ESC;
-    } else if (nec_read == IR_NEC_CODE_UP || rc6_read == IR_RC6_CODE_UP_1 || rc6_read == IR_RC6_CODE_UP_2) {
+    } else if (nec_read == IR_NEC_CODE_UP || rc6_read == IR_RC6_CODE_UP) {
         key_pressed = INFRARED_KEY_UP;
-    } else if (nec_read == IR_NEC_CODE_DOWN || rc6_read == IR_RC6_CODE_DOWN_1 || rc6_read == IR_RC6_CODE_DOWN_2) {
+    } else if (nec_read == IR_NEC_CODE_DOWN || rc6_read == IR_RC6_CODE_DOWN) {
         key_pressed = INFRARED_KEY_DOWN;
-    } else if (nec_read == IR_NEC_CODE_LEFT || rc6_read == IR_RC6_CODE_LEFT_1 || rc6_read == IR_RC6_CODE_LEFT_2) {
+    } else if (nec_read == IR_NEC_CODE_LEFT || rc6_read == IR_RC6_CODE_LEFT) {
         key_pressed = INFRARED_KEY_LEFT;
-    } else if (nec_read == IR_NEC_CODE_RIGHT || rc6_read == IR_RC6_CODE_RIGHT_1 || rc6_read == IR_RC6_CODE_RIGHT_2) {
+    } else if (nec_read == IR_NEC_CODE_RIGHT || rc6_read == IR_RC6_CODE_RIGHT) {
         key_pressed = INFRARED_KEY_RIGHT;
     }
 
