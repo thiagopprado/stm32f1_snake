@@ -40,12 +40,12 @@
  * @{
  */
 /** NEC */
-#define IR_NEC_CODE_ENTER           0x97680707
-#define IR_NEC_CODE_ESC             0xa7580707
-#define IR_NEC_CODE_UP              0x9f600707
-#define IR_NEC_CODE_DOWN            0x9e610707
-#define IR_NEC_CODE_LEFT            0x9a650707
-#define IR_NEC_CODE_RIGHT           0x9d620707
+#define IR_NEC_CODE_ENTER           0xE0E016E9
+#define IR_NEC_CODE_ESC             0xE0E01AE5
+#define IR_NEC_CODE_UP              0xE0E006F9
+#define IR_NEC_CODE_DOWN            0xE0E08679
+#define IR_NEC_CODE_LEFT            0xE0E0A659
+#define IR_NEC_CODE_RIGHT           0xE0E046B9
 
 /** RC6 */
 #define IR_RC6_CODE_ENTER_1         0x3bff
@@ -86,7 +86,7 @@ typedef struct {
     infrared_nec_state_t state;
     uint32_t value;
     uint32_t new_value;
-    uint8_t bit_idx;
+    int8_t bit_idx;
     uint16_t last_timeshot;
 } infrared_nec_ctrl_t;
 
@@ -94,7 +94,7 @@ typedef struct {
     infrared_rc6_state_t state;
     uint16_t value;
     uint16_t new_value;
-    uint8_t bit_idx;
+    int8_t bit_idx;
     uint8_t field_bits_nr;
     bool transition_ctrl;
     uint16_t last_timeshot;
@@ -118,6 +118,10 @@ static void infrared_nec_read(uint16_t timeshot) {
 
     nec_ctrl.last_timeshot = timeshot;
 
+    if (time_interval > 300) {
+        nec_ctrl.state = IR_NEC_STATE_INIT;
+    }
+
     switch (nec_ctrl.state) {
         case IR_NEC_STATE_INIT: {
             if (pin_value == false) {
@@ -131,7 +135,7 @@ static void infrared_nec_read(uint16_t timeshot) {
                 nec_ctrl.state = IR_NEC_STATE_INIT;
             } else if (pin_value == false) {
                 nec_ctrl.state = IR_NEC_STATE_READ_WAIT;
-                nec_ctrl.bit_idx = 0;
+                nec_ctrl.bit_idx = IR_NEC_BIT_NR - 1;
                 nec_ctrl.new_value = 0;
             }
 
@@ -158,8 +162,9 @@ static void infrared_nec_read(uint16_t timeshot) {
                     BIT_SET(nec_ctrl.new_value, nec_ctrl.bit_idx);
                 }
 
-                nec_ctrl.bit_idx++;
-                if (nec_ctrl.bit_idx == IR_NEC_BIT_NR) {
+                nec_ctrl.bit_idx--;
+                if (nec_ctrl.bit_idx < 0 ) {
+                    nec_ctrl.bit_idx = IR_NEC_BIT_NR - 1;
                     nec_ctrl.state = IR_NEC_STATE_STOP;
 
                 } else {
