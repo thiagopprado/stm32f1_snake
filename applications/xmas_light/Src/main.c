@@ -8,6 +8,7 @@
 #include "rcc.h"
 #include "led_ws2812.h"
 #include "timer.h"
+#include "gpio.h"
 
 #include "buzzer.h"
 #include "infrared.h"
@@ -24,6 +25,8 @@
 #define LED_CONTROL_DELAY_FAST      20
 #define LED_CONTROL_DELAY_SLOW      50
 #define LED_CONTROL_BRIGHT_STEP     10
+
+#define KEY_HOLD_COUNTER            200
 
 /**
  * @brief Times.
@@ -149,11 +152,30 @@ static void led_update(void) {
     static uint32_t ir_read_cooldown = 0;
     ir_key_id_t key_pressed = infrared_decode();
 
+    static bool last_key_state = true;
+    static uint32_t key_hold_cnt = 0;
+    bool key_state = gpio_read(GPIO_PORTB, 7);
+
     memset(led_color, 0, sizeof(led_color));
 
     if (ir_read_cooldown > 0) {
         ir_read_cooldown--;
     }
+
+    if (last_key_state == false && key_state == true && key_hold_cnt < KEY_HOLD_COUNTER) {
+        key_pressed = INFRARED_KEY_RIGHT;
+    }
+
+    if (key_state == false) {
+        key_hold_cnt++;
+        if (key_hold_cnt == KEY_HOLD_COUNTER) {
+            key_pressed = INFRARED_KEY_ENTER;
+        }
+    } else {
+        key_hold_cnt = 0;
+    }
+
+    last_key_state = key_state;
 
     if (key_pressed == INFRARED_KEY_RIGHT && ir_read_cooldown == 0) {
         if (led_effect == LED_EFFECT_XMAS) {
@@ -505,6 +527,9 @@ int main(void) {
     buzzer_setup();
     infrared_setup();
     led_ws2812_setup();
+
+    gpio_setup(GPIO_PORTB, 7, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL);
+    gpio_write(GPIO_PORTB, 7, GPIO_STATE_HIGH); // Pull up
 
     timer_setup(TIMER_1, 71, 99);
     timer_attach_callback(TIMER_1, timer_callback);
