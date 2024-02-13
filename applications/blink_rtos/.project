@@ -37,7 +37,7 @@
 		<link>
 			<name>drivers</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/drivers</locationURI>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/external_libs/stm32f1_bm_drivers</locationURI>
 		</link>
 		<link>
 			<name>CMSIS/Device</name>

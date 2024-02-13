@@ -1,13 +1,7 @@
 
 # STM32F1 - Blue Pill
 
-This repository contains drivers and projects using the blue pill board, which contains the STM32F1 microcontroller.
-
-## Drivers
-Currently were implemented the following drivers:
- - [GPIO](https://github.com/thiagopprado/STM32F1/tree/master/drivers/gpio)
- - [SPI](https://github.com/thiagopprado/STM32F1/tree/master/drivers/spi)
- - [Nokia 5110 display](https://github.com/thiagopprado/STM32F1/tree/master/drivers/nokia5110)
+This repository contains projects using the blue pill board, which contains the STM32F1 microcontroller.
 
 ## Projects
 ### Snake
