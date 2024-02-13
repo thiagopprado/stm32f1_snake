@@ -45,8 +45,8 @@
 									<listOptionValue builtIn="false" value="../Inc"/>
 									<listOptionValue builtIn="false" value="../../../drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../drivers/rcc"/>
-									<listOptionValue builtIn="false" value="../../../STM32CubeF1/Drivers/CMSIS/Include"/>
-									<listOptionValue builtIn="false" value="../../../STM32CubeF1/Drivers/CMSIS/Device/ST/STM32F1xx/Include"/>
+									<listOptionValue builtIn="false" value="../../../external_libs/STM32CubeF1_lite/Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../../external_libs/STM32CubeF1_lite/Drivers/CMSIS/Device/ST/STM32F1xx/Include"/>
 									<listOptionValue builtIn="false" value="../../../FreeRTOS/include"/>
 									<listOptionValue builtIn="false" value="../../../FreeRTOS/portable/GCC/ARM_CM3"/>
 								</option>
