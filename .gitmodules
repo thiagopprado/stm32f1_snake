@@ -1,6 +1,6 @@
-[submodule "FreeRTOS"]
-	path = FreeRTOS
-	url = https://github.com/FreeRTOS/FreeRTOS-Kernel
+[submodule "external_libs/FreeRTOS"]
+	path = external_libs/FreeRTOS
+	url = git@github.com:FreeRTOS/FreeRTOS-Kernel.git
 [submodule "external_libs/STM32CubeF1_lite"]
 	path = external_libs/STM32CubeF1_lite
 	url = git@github.com:thiagopprado/STM32CubeF1_lite.git
