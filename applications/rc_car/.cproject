@@ -47,7 +47,7 @@
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/rcc"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/timer"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/led_ws2812"/>
+									<listOptionValue builtIn="false" value="../../../drivers/led_ws2812"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_libs/buzzer"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_libs/infrared"/>
 								</option>
@@ -131,7 +131,7 @@
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/rcc"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/timer"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/led_ws2812"/>
+									<listOptionValue builtIn="false" value="../../../drivers/led_ws2812"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_libs/buzzer"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_libs/infrared"/>
 								</option>

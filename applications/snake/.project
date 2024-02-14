@@ -35,6 +35,11 @@
 			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/external_libs/stm32f1_bm_drivers</locationURI>
 		</link>
 		<link>
+			<name>nokia5110</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/drivers/nokia5110</locationURI>
+		</link>
+		<link>
 			<name>CMSIS/Device</name>
 			<type>2</type>
 			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/external_libs/STM32CubeF1_lite/Drivers/CMSIS/Device/ST/STM32F1xx/Include</locationURI>

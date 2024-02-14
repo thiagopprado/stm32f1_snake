@@ -46,7 +46,7 @@
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/spi"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/timer"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/nokia5110"/>
+									<listOptionValue builtIn="false" value="../../../drivers/nokia5110"/>
 									<listOptionValue builtIn="false" value="../Inc"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.986287702" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
@@ -80,6 +80,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
 						<entry excluding="led_ws2812" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="external_libs/stm32f1_bm_drivers"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="nokia5110"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -129,7 +130,7 @@
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/spi"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/timer"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/nokia5110"/>
+									<listOptionValue builtIn="false" value="../../../drivers/nokia5110"/>
 									<listOptionValue builtIn="false" value="../Inc"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1476791728" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
@@ -163,6 +164,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
 						<entry excluding="led_ws2812" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="external_libs/stm32f1_bm_drivers"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="nokia5110"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
