@@ -7,7 +7,6 @@
 #include <stdbool.h>
 
 #include "gpio.h"
-#include "spi.h"
 #include "nokia5110.h"
 #include "snake.h"
 
@@ -61,7 +60,6 @@ int main(void) {
     HAL_Init();
     clock_config();
 
-    spi_setup(SPI_BUS_1);
     nokia5110_setup();
     nokia5110_clear_buffer();
     nokia5110_update_screen();

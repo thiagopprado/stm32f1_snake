@@ -8,16 +8,19 @@
  */
 #include "nokia5110.h"
 
-#include "spi.h"
 #include "gpio.h"
+
+#include "stm32f1xx_hal.h"
 
 #define NOKIA5110_COL_PER_CHAR  5
 
+static SPI_HandleTypeDef spi_handle = { 0 };
+
 // Last written position
-uint16_t display_pos = 0;
+static uint16_t display_pos = 0;
 
 // ASCII characters array mapped to display pixels
-const uint8_t characters[][NOKIA5110_COL_PER_CHAR] = {
+static const uint8_t characters[][NOKIA5110_COL_PER_CHAR] = {
     // First 32 characters (0x00-0x19) are ignored. These are non-displayable, control characters.
     {0x00, 0x00, 0x00, 0x00, 0x00},  // 0x20
     {0x00, 0x00, 0x5f, 0x00, 0x00},  // 0x21 !
@@ -118,7 +121,7 @@ const uint8_t characters[][NOKIA5110_COL_PER_CHAR] = {
 };
 
 // Buffer with the bytes written to the display
-uint8_t screen_buffer[NOKIA5110_BYTES_NR] = {
+static uint8_t screen_buffer[NOKIA5110_BYTES_NR] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0xC0, 0x60, 0x30, 0x18, 0x84, 0xC2, 0xA3, 0x22, 0x32, 0x54, 0x44, 0xA4, 0x28,
     0x48, 0x88, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x88, 0x88, 0xC8, 0x68, 0x68,
@@ -153,7 +156,7 @@ uint8_t screen_buffer[NOKIA5110_BYTES_NR] = {
 };
 
 // Helper delay function
-void nokia5110_delay_ms(uint32_t millis);
+static void nokia5110_delay_ms(uint32_t millis);
 
 /**
  * @ingroup nokia5110
@@ -165,7 +168,29 @@ void nokia5110_delay_ms(uint32_t millis);
  *      - PORTA4: Chip Select (activeted with 0)
  */
 void nokia5110_setup(void) {
-    uint8_t buffer[4] = {0};
+    uint8_t buffer[4] = { 0 };
+
+    __HAL_RCC_SPI1_CLK_ENABLE();
+
+    // PORTA5 = SCLK1
+    gpio_setup(GPIO_PORTA, 5, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_AF_PUSH_PULL);
+    // PORTA6 = MISO1
+    gpio_setup(GPIO_PORTA, 6, GPIO_MODE_INPUT, GPIO_CFG_IN_FLOAT);
+    // PORTA7 = MOSI1
+    gpio_setup(GPIO_PORTA, 7, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_AF_PUSH_PULL);
+
+    spi_handle.Instance = SPI1;
+    spi_handle.Init.Mode = SPI_MODE_MASTER;
+    spi_handle.Init.Direction = SPI_DIRECTION_2LINES;
+    spi_handle.Init.DataSize = SPI_DATASIZE_8BIT;
+    spi_handle.Init.CLKPolarity = SPI_POLARITY_LOW;
+    spi_handle.Init.CLKPhase = SPI_PHASE_1EDGE;
+    spi_handle.Init.NSS = SPI_NSS_SOFT;
+    spi_handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
+    spi_handle.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    spi_handle.Init.TIMode = SPI_TIMODE_DISABLE;
+    spi_handle.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    HAL_SPI_Init(&spi_handle);
 
     gpio_setup(GPIO_PORTA, 0, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // DC
     gpio_setup(GPIO_PORTA, 1, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // RST
@@ -187,7 +212,7 @@ void nokia5110_setup(void) {
     buffer[2] = 0x20; // Basic instruction set
     buffer[3] = 0x0C; // Normal mode
     gpio_clr(GPIOA, 4); // Clear CS
-    spi_trx(SPI_BUS_1, buffer, 4);
+    HAL_SPI_Transmit(&spi_handle, buffer, 4, 100);
     gpio_set(GPIOA, 4); // Set CS
 
     nokia5110_clear_screen();
@@ -216,7 +241,7 @@ void nokia5110_move_cursor(uint8_t x, uint8_t y) {
     buffer[1] = 0x40 | y; // Line
     buffer[2] = 0x80 | x; // Collumn
     gpio_clr(GPIOA, 4); // Clear CS
-    spi_trx(SPI_BUS_1, buffer, 3);
+    HAL_SPI_Transmit(&spi_handle, buffer, 3, 100);
     gpio_set(GPIOA, 4); // Set CS
 }
 
@@ -235,7 +260,7 @@ void nokia5110_clear_screen(void) {
     gpio_clr(GPIOA, 4); // Clear CS
     for (i = 0; i < NOKIA5110_BYTES_NR; i++) {
         buffer = 0;
-        spi_trx(SPI_BUS_1, &buffer, 1);
+        HAL_SPI_Transmit(&spi_handle, &buffer, 1, 100);
     }
     gpio_set(GPIOA, 4); // Set CS
 }
@@ -261,7 +286,7 @@ void nokia5110_char(char character) {
         screen_buffer[display_pos++] = buffer[i];
     }
     gpio_clr(GPIOA, 4); // Clear CS
-    spi_trx(SPI_BUS_1, buffer, NOKIA5110_COL_PER_CHAR + 1);
+    HAL_SPI_Transmit(&spi_handle, buffer, NOKIA5110_COL_PER_CHAR + 1, 100);
     gpio_set(GPIOA, 4); // Set CS
 
     // Keeps count of the added blank collumn
@@ -323,7 +348,7 @@ void nokia5110_update_screen(void) {
     gpio_clr(GPIOA, 4); // Clear CS
     for (i = 0; i < NOKIA5110_BYTES_NR; i++) {
         buffer = screen_buffer[i];
-        spi_trx(SPI_BUS_1, &buffer, 1);
+        HAL_SPI_Transmit(&spi_handle, &buffer, 1, 100);
     }
     gpio_set(GPIOA, 4); // Set CS
 }
@@ -438,7 +463,7 @@ void nokia5110_clear_rectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
  *
  * @note The values were found empirically.
  */
-void nokia5110_delay_ms(uint32_t millis) {
+static void nokia5110_delay_ms(uint32_t millis) {
     volatile uint32_t a = 0;
 
     for (; millis > 0; millis--) {
