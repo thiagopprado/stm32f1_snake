@@ -40,14 +40,14 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.1973262764" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="../../../external_libs/STM32CubeF1_lite/Drivers/CMSIS/Include"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/STM32CubeF1_lite/Drivers/CMSIS/Device/ST/STM32F1xx/Include"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/rcc"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/gpio"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/spi"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/timer"/>
-									<listOptionValue builtIn="false" value="../../../drivers/nokia5110"/>
-									<listOptionValue builtIn="false" value="../Inc"/>
+									<listOptionValue builtIn="false" value="../core/inc"/>
+									<listOptionValue builtIn="false" value="../drivers/nokia5110"/>
+									<listOptionValue builtIn="false" value="../external_libs/stm32f1_bm_drivers/rcc"/>
+									<listOptionValue builtIn="false" value="../external_libs/stm32f1_bm_drivers/gpio"/>
+									<listOptionValue builtIn="false" value="../external_libs/stm32f1_bm_drivers/spi"/>
+									<listOptionValue builtIn="false" value="../external_libs/stm32f1_bm_drivers/timer"/>
+									<listOptionValue builtIn="false" value="../external_libs/STM32CubeF1_lite/Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../external_libs/STM32CubeF1_lite/Drivers/CMSIS/Device/ST/STM32F1xx/Include"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.986287702" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -74,13 +74,10 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="CMSIS"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Inc"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
-						<entry excluding="led_ws2812" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="external_libs/stm32f1_bm_drivers"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="nokia5110"/>
+						<entry excluding="core|drivers|external_libs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="core"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="drivers"/>
+						<entry excluding="STM32CubeF1_lite/Middlewares|STM32CubeF1_lite/Drivers/CMSIS/RTOS2|STM32CubeF1_lite/Drivers/CMSIS/RTOS|STM32CubeF1_lite/Drivers/CMSIS/NN|STM32CubeF1_lite/Drivers/CMSIS/Lib|STM32CubeF1_lite/Drivers/CMSIS/DSP|STM32CubeF1_lite/Drivers/CMSIS/docs|STM32CubeF1_lite/Drivers/CMSIS/Core_A|STM32CubeF1_lite/Drivers/CMSIS/Core|STM32CubeF1_lite/Drivers/CMSIS/Device/ST/STM32F1xx/Source|STM32CubeF1_lite/Drivers/STM32F1xx_HAL_Driver" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="external_libs"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -124,14 +121,14 @@
 									<listOptionValue builtIn="false" value="STM32F103C8Tx"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.1712510782" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="../../../external_libs/STM32CubeF1_lite/Drivers/CMSIS/Include"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/STM32CubeF1_lite/Drivers/CMSIS/Device/ST/STM32F1xx/Include"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/rcc"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/gpio"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/spi"/>
-									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/timer"/>
-									<listOptionValue builtIn="false" value="../../../drivers/nokia5110"/>
-									<listOptionValue builtIn="false" value="../Inc"/>
+									<listOptionValue builtIn="false" value="../core/inc"/>
+									<listOptionValue builtIn="false" value="../drivers/nokia5110"/>
+									<listOptionValue builtIn="false" value="../external_libs/stm32f1_bm_drivers/rcc"/>
+									<listOptionValue builtIn="false" value="../external_libs/stm32f1_bm_drivers/gpio"/>
+									<listOptionValue builtIn="false" value="../external_libs/stm32f1_bm_drivers/spi"/>
+									<listOptionValue builtIn="false" value="../external_libs/stm32f1_bm_drivers/timer"/>
+									<listOptionValue builtIn="false" value="../external_libs/STM32CubeF1_lite/Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../external_libs/STM32CubeF1_lite/Drivers/CMSIS/Device/ST/STM32F1xx/Include"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1476791728" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -158,13 +155,10 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="CMSIS"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Inc"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
-						<entry excluding="led_ws2812" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="external_libs/stm32f1_bm_drivers"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="nokia5110"/>
+						<entry excluding="core|drivers|external_libs" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="core"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="drivers"/>
+						<entry excluding="STM32CubeF1_lite/Middlewares|STM32CubeF1_lite/Drivers/CMSIS/RTOS2|STM32CubeF1_lite/Drivers/CMSIS/RTOS|STM32CubeF1_lite/Drivers/CMSIS/NN|STM32CubeF1_lite/Drivers/CMSIS/Lib|STM32CubeF1_lite/Drivers/CMSIS/DSP|STM32CubeF1_lite/Drivers/CMSIS/docs|STM32CubeF1_lite/Drivers/CMSIS/Core_A|STM32CubeF1_lite/Drivers/CMSIS/Core|STM32CubeF1_lite/Drivers/CMSIS/Device/ST/STM32F1xx/Source|STM32CubeF1_lite/Drivers/STM32F1xx_HAL_Driver" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="external_libs"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
