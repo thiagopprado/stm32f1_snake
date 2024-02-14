@@ -161,9 +161,6 @@ static uint8_t screen_buffer[NOKIA5110_BYTES_NR] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 };
 
-// Helper delay function
-static void nokia5110_delay_ms(uint32_t millis);
-
 /**
  * @ingroup nokia5110
  * @brief Sets up the Nokia 5110 display.
@@ -215,7 +212,8 @@ void nokia5110_setup(void) {
 
     // Reset Pulse
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_RST_PIN, GPIO_PIN_RESET);
-    nokia5110_delay_ms(10);
+    uint32_t timeshot = HAL_GetTick();
+    while (HAL_GetTick() - timeshot < 10);
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_RST_PIN, GPIO_PIN_SET);
 
     // LCD setup
@@ -474,21 +472,5 @@ void nokia5110_clear_rectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
         nokia5110_clr_pixel(x1, i);
         // Right side
         nokia5110_clr_pixel(x2, i);
-    }
-}
-
-/**
- * @ingroup nokia5110
- * @brief Internal milliseconds delay function
- *
- * @param millis    Milliseconds to wait.
- *
- * @note The values were found empirically.
- */
-static void nokia5110_delay_ms(uint32_t millis) {
-    volatile uint32_t a = 0;
-
-    for (; millis > 0; millis--) {
-        for	(a = 0; a < 800; a++);
     }
 }
