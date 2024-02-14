@@ -6,6 +6,7 @@
  * @brief Snake game implementation
  * 
  */
+/* Includes ------------------------------------------------------------------*/
 #include "snake.h"
 
 #include "nokia5110.h"
@@ -15,6 +16,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+/* Private types -------------------------------------------------------------*/
+
+/* Private defines -----------------------------------------------------------*/
 // Define as 1 to draw the snake with 3 pixels width
 #define SNAKE_THINNER   0
 
@@ -47,21 +51,164 @@
 #define SNAKE_KEYBOARD_LEFT_PIN     GPIO_PIN_14
 #define SNAKE_KEYBOARD_UP_PIN       GPIO_PIN_15
 
+/* Private variables ---------------------------------------------------------*/
 // Snake and food coordinates
-snake_pos_t snake[SNAKE_MAX_SIZE] = { {2, 0}, {1, 0}, {0, 0}, };
-snake_pos_t food = {SNAKE_INIT_FOOD_X, SNAKE_INIT_FOOD_Y};
-snake_state_t game_state = SNAKE_STATE_PLAYING;
-snake_dir_t direction = SNAKE_DIR_RIGHT;
-snake_dir_t last_direction = SNAKE_DIR_RIGHT;
-snake_key_t key_pressed = SNAKE_KEY_NONE;
-uint8_t size = SNAKE_INIT_SIZE;
-uint8_t head = 0;
+static snake_pos_t snake[SNAKE_MAX_SIZE] = { {2, 0}, {1, 0}, {0, 0}, };
+static snake_pos_t food = {SNAKE_INIT_FOOD_X, SNAKE_INIT_FOOD_Y};
+static snake_state_t game_state = SNAKE_STATE_PLAYING;
+static snake_dir_t direction = SNAKE_DIR_RIGHT;
+static snake_dir_t last_direction = SNAKE_DIR_RIGHT;
+static snake_key_t key_pressed = SNAKE_KEY_NONE;
+static uint8_t size = SNAKE_INIT_SIZE;
+static uint8_t head = 0;
 
-snake_collision_t snake_check_collision(snake_pos_t position);
-void snake_draw_part(snake_pos_t part_coord);
-void snake_erase_part(snake_pos_t part_coord);
-void snake_draw_food(void);
+/* Private function prototypes -----------------------------------------------*/
+static snake_collision_t snake_check_collision(snake_pos_t position);
+static void snake_draw_part(snake_pos_t part_coord);
+static void snake_erase_part(snake_pos_t part_coord);
+static void snake_draw_food(void);
 
+/* Private function implementation--------------------------------------------*/
+/**
+ * @ingroup snake
+ * @brief Checks if the given position is inside the snake.
+ *
+ * @param position  Coordinate to check.
+ *
+ * @return TRUE, if the point is inside the snake, FALSE, otherwise.
+ */
+static snake_collision_t snake_check_collision(snake_pos_t position) {
+    uint8_t i = 0;
+    uint16_t compare_pos = 0;
+
+    // Compare the given position with all snake parts
+    for (i = 0; i < size; i++) {
+        compare_pos = head + i;
+        if (compare_pos >= SNAKE_MAX_SIZE) {
+            compare_pos -= SNAKE_MAX_SIZE;
+        }
+
+        if ((position.x == snake[compare_pos].x) &&
+            (position.y == snake[compare_pos].y)) {
+            return SNAKE_COLLISION_TRUE;
+        }
+    }
+
+    return SNAKE_COLLISION_FALSE;
+}
+
+/**
+ * @ingroup snake
+ * @brief Draw the food
+ */
+static void snake_draw_food(void) {
+    uint8_t x, y;
+
+    x = SNAKE_X_0 + SNAKE_PART_SIZE * food.x;
+    y = SNAKE_Y_0 + SNAKE_PART_SIZE * food.y;
+
+    nokia5110_set_pixel(x + 1, y + 1);
+    nokia5110_set_pixel(x + 2, y + 2);
+    nokia5110_set_pixel(x + 1, y + 3);
+    nokia5110_set_pixel(x, y + 2);
+}
+
+/**
+ * @ingroup snake
+ * @brief Draw a snake part
+ *
+ * @param part_coord  Coordinates of the part to draw.
+ */
+static void snake_draw_part(snake_pos_t part_coord) {
+    uint8_t i, j, x, y;
+
+    x = SNAKE_X_0 + SNAKE_PART_SIZE * part_coord.x;
+    y = SNAKE_Y_0 + SNAKE_PART_SIZE * part_coord.y;
+
+    for (i = 0; i < SNAKE_PART_SIZE; i++) {
+        for (j = 0; j < SNAKE_PART_SIZE; j++) {
+            nokia5110_set_pixel(x + i, y + j);
+        }
+    }
+#if (SNAKE_THINNER == 1)
+    // Personalizes the part according to directions
+    if (direction == SNAKE_DIR_RIGHT || direction == SNAKE_DIR_LEFT) {
+        // Horizontal
+        for (i = 0; i < SNAKE_PART_SIZE; i++) {
+            nokia5110_clr_pixel(x + i, y);
+        }
+    } else {
+        // Vertical
+        for (i = 0; i < SNAKE_PART_SIZE; i++) {
+            nokia5110_clr_pixel(x + SNAKE_PART_SIZE - 1, y + i);
+        }
+    }
+    if (last_direction != direction) {
+        // Corner
+        uint8_t last_head = head + 1, i = 0;
+
+        if (last_head == SNAKE_MAX_SIZE) {
+            last_head = 0;
+        }
+
+        x = SNAKE_X_0 + SNAKE_PART_SIZE * snake[last_head].x;
+        y = SNAKE_Y_0 + SNAKE_PART_SIZE * snake[last_head].y;
+
+        if (last_direction == SNAKE_DIR_UP && direction == SNAKE_DIR_RIGHT) {
+            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
+                nokia5110_clr_pixel(x + i, y);
+            }
+            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
+                nokia5110_set_pixel(x + SNAKE_PART_SIZE - 1, y + 1 + i);
+            }
+        } else if (last_direction == SNAKE_DIR_UP && direction == SNAKE_DIR_LEFT) {
+            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
+                nokia5110_clr_pixel(x + i, y);
+            }
+        } else if (last_direction == SNAKE_DIR_DOWN && direction == SNAKE_DIR_RIGHT) {
+            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
+                nokia5110_set_pixel(x + SNAKE_PART_SIZE - 1, y + 1 + i);
+            }
+        } else if (last_direction == SNAKE_DIR_RIGHT && direction == SNAKE_DIR_UP) {
+            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
+                nokia5110_set_pixel(x + i, y);
+            }
+            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
+                nokia5110_clr_pixel(x + SNAKE_PART_SIZE - 1, y + 1 + i);
+            }
+        } else if (last_direction == SNAKE_DIR_RIGHT && direction == SNAKE_DIR_DOWN) {
+            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
+                nokia5110_clr_pixel(x + SNAKE_PART_SIZE - 1, y + 1 + i);
+            }
+        } else if (last_direction == SNAKE_DIR_LEFT && direction == SNAKE_DIR_UP) {
+            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
+                nokia5110_set_pixel(x + i, y);
+            }
+        }
+    }
+#endif /* SNAKE_THINNER */
+}
+
+/**
+ * @ingroup snake
+ * @brief Erase a snake part
+ *
+ * @param part_coord  Coordinates of the part to erase.
+ */
+static void snake_erase_part(snake_pos_t part_coord) {
+    uint8_t i, j, x, y;
+
+    x = SNAKE_X_0 + SNAKE_PART_SIZE * part_coord.x;
+    y = SNAKE_Y_0 + SNAKE_PART_SIZE * part_coord.y;
+
+    for (i = 0; i < SNAKE_PART_SIZE; i++) {
+        for (j = 0; j < SNAKE_PART_SIZE; j++) {
+            nokia5110_clr_pixel(x + i, y + j);
+        }
+    }
+}
+
+/* Public functions ----------------------------------------------------------*/
 /**
  * @ingroup snake
  * @brief Inits the snake game
@@ -284,145 +431,6 @@ void snake_kbd_debounce(void) {
          */
         if (current_key != SNAKE_KEY_NONE) {
             key_pressed = current_key;
-        }
-    }
-}
-
-/**
- * @ingroup snake
- * @brief Checks if the given position is inside the snake.
- *
- * @param position  Coordinate to check.
- *
- * @return TRUE, if the point is inside the snake, FALSE, otherwise.
- */
-snake_collision_t snake_check_collision(snake_pos_t position) {
-    uint8_t i = 0;
-    uint16_t compare_pos = 0;
-
-    // Compare the given position with all snake parts
-    for (i = 0; i < size; i++) {
-        compare_pos = head + i;
-        if (compare_pos >= SNAKE_MAX_SIZE) {
-            compare_pos -= SNAKE_MAX_SIZE;
-        }
-
-        if ((position.x == snake[compare_pos].x) &&
-            (position.y == snake[compare_pos].y)) {
-            return SNAKE_COLLISION_TRUE;
-        }
-    }
-
-    return SNAKE_COLLISION_FALSE;
-}
-
-/**
- * @ingroup snake
- * @brief Draw the food
- */
-void snake_draw_food(void) {
-    uint8_t x, y;
-
-    x = SNAKE_X_0 + SNAKE_PART_SIZE * food.x;
-    y = SNAKE_Y_0 + SNAKE_PART_SIZE * food.y;
-
-    nokia5110_set_pixel(x + 1, y + 1);
-    nokia5110_set_pixel(x + 2, y + 2);
-    nokia5110_set_pixel(x + 1, y + 3);
-    nokia5110_set_pixel(x, y + 2);
-}
-
-/**
- * @ingroup snake
- * @brief Draw a snake part
- *
- * @param part_coord  Coordinates of the part to draw.
- */
-void snake_draw_part(snake_pos_t part_coord) {
-    uint8_t i, j, x, y;
-
-    x = SNAKE_X_0 + SNAKE_PART_SIZE * part_coord.x;
-    y = SNAKE_Y_0 + SNAKE_PART_SIZE * part_coord.y;
-
-    for (i = 0; i < SNAKE_PART_SIZE; i++) {
-        for (j = 0; j < SNAKE_PART_SIZE; j++) {
-            nokia5110_set_pixel(x + i, y + j);
-        }
-    }
-#if (SNAKE_THINNER == 1)
-    // Personalizes the part according to directions
-    if (direction == SNAKE_DIR_RIGHT || direction == SNAKE_DIR_LEFT) {
-        // Horizontal
-        for (i = 0; i < SNAKE_PART_SIZE; i++) {
-            nokia5110_clr_pixel(x + i, y);
-        }
-    } else {
-        // Vertical
-        for (i = 0; i < SNAKE_PART_SIZE; i++) {
-            nokia5110_clr_pixel(x + SNAKE_PART_SIZE - 1, y + i);
-        }
-    }
-    if (last_direction != direction) {
-        // Corner
-        uint8_t last_head = head + 1, i = 0;
-
-        if (last_head == SNAKE_MAX_SIZE) {
-            last_head = 0;
-        }
-
-        x = SNAKE_X_0 + SNAKE_PART_SIZE * snake[last_head].x;
-        y = SNAKE_Y_0 + SNAKE_PART_SIZE * snake[last_head].y;
-
-        if (last_direction == SNAKE_DIR_UP && direction == SNAKE_DIR_RIGHT) {
-            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
-                nokia5110_clr_pixel(x + i, y);
-            }
-            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
-                nokia5110_set_pixel(x + SNAKE_PART_SIZE - 1, y + 1 + i);
-            }
-        } else if (last_direction == SNAKE_DIR_UP && direction == SNAKE_DIR_LEFT) {
-            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
-                nokia5110_clr_pixel(x + i, y);
-            }
-        } else if (last_direction == SNAKE_DIR_DOWN && direction == SNAKE_DIR_RIGHT) {
-            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
-                nokia5110_set_pixel(x + SNAKE_PART_SIZE - 1, y + 1 + i);
-            }
-        } else if (last_direction == SNAKE_DIR_RIGHT && direction == SNAKE_DIR_UP) {
-            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
-                nokia5110_set_pixel(x + i, y);
-            }
-            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
-                nokia5110_clr_pixel(x + SNAKE_PART_SIZE - 1, y + 1 + i);
-            }
-        } else if (last_direction == SNAKE_DIR_RIGHT && direction == SNAKE_DIR_DOWN) {
-            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
-                nokia5110_clr_pixel(x + SNAKE_PART_SIZE - 1, y + 1 + i);
-            }
-        } else if (last_direction == SNAKE_DIR_LEFT && direction == SNAKE_DIR_UP) {
-            for (i = 0; i < SNAKE_PART_SIZE - 1; i++) {
-                nokia5110_set_pixel(x + i, y);
-            }
-        }
-    }
-#endif /* SNAKE_THINNER */
-}
-
-/**
- * @ingroup snake
- * @brief Erase a snake part
- *
- * @param part_coord  Coordinates of the part to erase.
- */
-void snake_erase_part(snake_pos_t part_coord) {
-    uint8_t i, j, x, y;
-
-    x = SNAKE_X_0 + SNAKE_PART_SIZE * part_coord.x;
-    y = SNAKE_Y_0 + SNAKE_PART_SIZE * part_coord.y;
-
-    for (i = 0; i < SNAKE_PART_SIZE; i++) {
-        for (j = 0; j < SNAKE_PART_SIZE; j++) {
-            nokia5110_clr_pixel(x + i, y + j);
         }
     }
 }

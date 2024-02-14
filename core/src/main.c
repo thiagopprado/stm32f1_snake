@@ -21,7 +21,6 @@
 static void clock_config(void);
 
 /* Private function implementation--------------------------------------------*/
-
 /**
  * @brief MCU clock configuration.
  */
