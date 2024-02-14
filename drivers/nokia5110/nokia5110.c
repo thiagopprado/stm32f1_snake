@@ -329,11 +329,10 @@ void nokia5110_clear_screen(void) {
 void nokia5110_char(char character) {
     // Adds 1 blank collumn after the char (buffer == 0)
     uint8_t buffer[NOKIA5110_COL_PER_CHAR + 1] = { 0 };
-    uint8_t i = 0;
 
     // DC = 1 --> Data
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_DC_PIN, GPIO_PIN_SET);
-    for (i = 0; i < NOKIA5110_COL_PER_CHAR; i++) {
+    for (uint8_t i = 0; i < NOKIA5110_COL_PER_CHAR; i++) {
         buffer[i] = characters[character - NOKIA5110_FIRST_CHAR_VALUE][i];
         screen_buffer[display_pos++] = buffer[i];
     }
@@ -406,9 +405,7 @@ void nokia5110_update_screen(void) {
  * @brief Clear the screen_buffer.
  */
 void nokia5110_clear_buffer(void) {
-    uint16_t i = 0;
-
-    for (i = 0; i < NOKIA5110_BYTES_NR; i++) {
+    for (uint16_t i = 0; i < NOKIA5110_BYTES_NR; i++) {
         screen_buffer[i] = 0;
     }
 }
@@ -458,15 +455,13 @@ void nokia5110_clr_pixel(uint8_t x, uint8_t y) {
  * after @ref nokia5110_draw_rectangle to actually update the screen.
  */
 void nokia5110_draw_rectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
-    uint8_t i = 0;
-
-    for (i = x1; i <= x2; i++) {
+    for (uint8_t i = x1; i <= x2; i++) {
         // Top side
         nokia5110_set_pixel(i, y1);
         // Bottom Side
         nokia5110_set_pixel(i, y2);
     }
-    for (i = y1; i <= y2; i++) {
+    for (uint8_t i = y1; i <= y2; i++) {
         // Left side
         nokia5110_set_pixel(x1, i);
         // Right side
@@ -487,15 +482,13 @@ void nokia5110_draw_rectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
  * after @ref nokia5110_clear_rectangle to actually update the screen.
  */
 void nokia5110_clear_rectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
-    uint8_t i = 0;
-
-    for (i = x1; i <= x2; i++) {
+    for (uint8_t i = x1; i <= x2; i++) {
         // Top side
         nokia5110_clr_pixel(i, y1);
         // Bottom Side
         nokia5110_clr_pixel(i, y2);
     }
-    for (i = y1; i <= y2; i++) {
+    for (uint8_t i = y1; i <= y2; i++) {
         // Left side
         nokia5110_clr_pixel(x1, i);
         // Right side
