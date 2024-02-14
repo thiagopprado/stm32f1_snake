@@ -271,10 +271,10 @@ void nokia5110_setup(void) {
  * @brief Move display cursor.
  *
  * The display pixels are organized vertically in groups of 8.
- * This results in 84 collumns and only 6 lines, each line with
+ * This results in 84 columns and only 6 lines, each line with
  * 8 pixels.
  *
- * @param x     Collumn (from 0 to 83).
+ * @param x     Column (from 0 to 83).
  * @param y     Line (from 0 to 5).
  */
 void nokia5110_move_cursor(uint8_t x, uint8_t y) {
@@ -286,7 +286,7 @@ void nokia5110_move_cursor(uint8_t x, uint8_t y) {
 
     uint8_t buffer[2] = {0};
     buffer[0] = NOKIA5110_CMD_Y_ADDR | y; // Line
-    buffer[1] = NOKIA5110_CMD_X_ADDR | x; // Collumn
+    buffer[1] = NOKIA5110_CMD_X_ADDR | x; // Column
 
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_RESET);
     HAL_SPI_Transmit(&spi_handle, buffer, 2, NOKIA5110_SPI_TIMEOUT);
@@ -324,7 +324,7 @@ void nokia5110_clear_screen(void) {
  * after the execution of @ref nokia5110_update_screen.
  */
 void nokia5110_char(char character) {
-    // Adds 1 blank collumn after the char (buffer == 0)
+    // Adds 1 blank column after the char (buffer == 0)
     uint8_t buffer[NOKIA5110_COL_PER_CHAR + 1] = { 0 };
 
     // DC = 1 --> Data
@@ -337,7 +337,7 @@ void nokia5110_char(char character) {
     HAL_SPI_Transmit(&spi_handle, buffer, NOKIA5110_COL_PER_CHAR + 1, NOKIA5110_SPI_TIMEOUT);
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_SET);
 
-    // Keeps count of the added blank collumn
+    // Keeps count of the added blank column
     screen_buffer[display_pos++] = 0;
 }
 
@@ -346,7 +346,7 @@ void nokia5110_char(char character) {
  * @brief Writes a character at the given screen position.
  *
  * @param character     Character to print.
- * @param x             Collumn (from 0 to 83).
+ * @param x             Column (from 0 to 83).
  * @param y             Line (from 0 to 5).
  */
 void nokia5110_char_at(char character, uint8_t x, uint8_t y) {
@@ -374,7 +374,7 @@ void nokia5110_string(char* string) {
  * @brief Writes a string at the given screen position.
  *
  * @param string     String to print.
- * @param x          Collumn (from 0 to 83).
+ * @param x          Column (from 0 to 83).
  * @param y          Line (from 0 to 5).
  */
 void nokia5110_string_at(char* string, uint8_t x, uint8_t y) {
@@ -411,7 +411,7 @@ void nokia5110_clear_buffer(void) {
  * @ingroup nokia5110
  * @brief Sets a pixel on the screen_buffer.
  *
- * @param x     Collumn position (from 0 to 83).
+ * @param x     Column position (from 0 to 83).
  * @param y     Line position (from 0 to 47).
  *
  * @note The function @ref nokia5110_update_screen must be executed
@@ -427,7 +427,7 @@ void nokia5110_set_pixel(uint8_t x, uint8_t y) {
  * @ingroup nokia5110
  * @brief Clears a pixel on the screen_buffer.
  *
- * @param x     Collumn position (from 0 to 83).
+ * @param x     Column position (from 0 to 83).
  * @param y     Line position (from 0 to 47).
  *
  * @note The function @ref nokia5110_update_screen must be executed

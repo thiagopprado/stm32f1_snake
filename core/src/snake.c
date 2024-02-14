@@ -67,7 +67,7 @@ typedef enum {
  * x = (0, 20), y = (0, 11)
  */
 typedef struct {
-    uint8_t x;  /**< X coordinate (collumn). */
+    uint8_t x;  /**< X coordinate (column). */
     uint8_t y;  /**< Y coordinate (line). */
 } snake_pos_t;
 
