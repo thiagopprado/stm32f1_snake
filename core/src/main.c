@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "nokia5110.h"
 #include "snake.h"
 
 #include "stm32f1xx_hal.h"
@@ -58,20 +57,14 @@ int main(void) {
     HAL_Init();
     clock_config();
 
-    nokia5110_setup();
-    nokia5110_clear_buffer();
-    nokia5110_update_screen();
-
     snake_init();
-    nokia5110_update_screen();
 
-    for(;;) {
+    while(true) {
         snake_kbd_debounce();
 
         if (HAL_GetTick() - game_update_timeshot >= 100) {
             game_update_timeshot = HAL_GetTick();
             snake_update();
-            nokia5110_update_screen();
         }
     }
 }

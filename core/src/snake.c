@@ -238,6 +238,8 @@ void snake_init(void) {
     gpio_init.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(SNAKE_KEYBOARD_PORT, &gpio_init);
 
+    nokia5110_setup();
+
     // Draw game borders
     nokia5110_clear_buffer();
     nokia5110_draw_rectangle(SNAKE_RECT_X1, SNAKE_RECT_Y1, SNAKE_RECT_X2, SNAKE_RECT_Y2);
@@ -266,6 +268,8 @@ void snake_init(void) {
         snake_draw_part(snake[i]);
     }
     snake_draw_food();
+
+    nokia5110_update_screen();
 }
 
 /**
@@ -394,6 +398,8 @@ void snake_update(void) {
         // Erases tail only if didn't reached the food
         snake_erase_part(snake[tail]);
     }
+
+    nokia5110_update_screen();
 }
 
 /**
