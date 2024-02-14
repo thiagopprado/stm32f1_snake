@@ -9,7 +9,6 @@
 #include "snake.h"
 
 #include "nokia5110.h"
-#include "gpio.h"
 
 #include "stm32f1xx_hal.h"
 
@@ -41,6 +40,12 @@
 #define SNAKE_Y_0       2
 
 #define SNAKE_DEBOUNCE_TIME_MS  10
+
+#define SNAKE_KEYBOARD_PORT         GPIOB
+#define SNAKE_KEYBOARD_RIGHT_PIN    GPIO_PIN_12
+#define SNAKE_KEYBOARD_DOWN_PIN     GPIO_PIN_13
+#define SNAKE_KEYBOARD_LEFT_PIN     GPIO_PIN_14
+#define SNAKE_KEYBOARD_UP_PIN       GPIO_PIN_15
 
 // Snake and food coordinates
 snake_pos_t snake[SNAKE_MAX_SIZE] = { {2, 0}, {1, 0}, {0, 0}, };
@@ -74,20 +79,17 @@ void snake_draw_food(void);
  * to actually update the screen.
  */
 void snake_init(void) {
+    GPIO_InitTypeDef gpio_init = { 0 };
     uint8_t i = 0;
 
-    // Cfg keyboard
-    gpio_setup(GPIO_PORTB, 12, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Right
-    gpio_write(GPIO_PORTB, 12, GPIO_STATE_HIGH); // Pull up
+    __HAL_RCC_GPIOB_CLK_ENABLE();
 
-    gpio_setup(GPIO_PORTB, 13, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Down
-    gpio_write(GPIO_PORTB, 13, GPIO_STATE_HIGH); // Pull up
-
-    gpio_setup(GPIO_PORTB, 14, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Left
-    gpio_write(GPIO_PORTB, 14, GPIO_STATE_HIGH); // Pull up
-
-    gpio_setup(GPIO_PORTB, 15, GPIO_MODE_INPUT, GPIO_CFG_IN_PULL); // Up
-    gpio_write(GPIO_PORTB, 15, GPIO_STATE_HIGH); // Pull up
+    // PB12 = Right | PB13 = Down | PB14 = Left | PB15 = Up
+    gpio_init.Pin = SNAKE_KEYBOARD_RIGHT_PIN | SNAKE_KEYBOARD_DOWN_PIN | SNAKE_KEYBOARD_LEFT_PIN | SNAKE_KEYBOARD_UP_PIN;
+    gpio_init.Mode = GPIO_MODE_INPUT;
+    gpio_init.Pull = GPIO_PULLUP;
+    gpio_init.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(SNAKE_KEYBOARD_PORT, &gpio_init);
 
     // Draw game borders
     nokia5110_clear_buffer();
@@ -259,16 +261,16 @@ void snake_kbd_debounce(void) {
     static uint32_t debounce_timeshot = 0;
     snake_key_t current_key = SNAKE_KEY_NONE;
 
-    if (gpio_read(GPIO_PORTB, 12) == GPIO_STATE_LOW) {
+    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_RIGHT_PIN) == GPIO_PIN_RESET) {
         current_key = SNAKE_KEY_RIGHT;
     }
-    if (gpio_read(GPIO_PORTB, 13) == GPIO_STATE_LOW) {
+    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_DOWN_PIN) == GPIO_PIN_RESET) {
         current_key = SNAKE_KEY_DOWN;
     }
-    if (gpio_read(GPIO_PORTB, 14) == GPIO_STATE_LOW) {
+    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_LEFT_PIN) == GPIO_PIN_RESET) {
         current_key = SNAKE_KEY_LEFT;
     }
-    if (gpio_read(GPIO_PORTB, 15) == GPIO_STATE_LOW) {
+    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_UP_PIN) == GPIO_PIN_RESET) {
         current_key = SNAKE_KEY_UP;
     }
 

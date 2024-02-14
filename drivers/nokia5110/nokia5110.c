@@ -8,11 +8,17 @@
  */
 #include "nokia5110.h"
 
-#include "gpio.h"
-
 #include "stm32f1xx_hal.h"
 
 #define NOKIA5110_COL_PER_CHAR  5
+#define NOKIA5110_SPI_INSTANCE  SPI1
+#define NOKIA5110_GPIO_PORT     GPIOA
+#define NOKIA5110_DC_PIN        GPIO_PIN_0
+#define NOKIA5110_RST_PIN       GPIO_PIN_1
+#define NOKIA5110_CS_PIN        GPIO_PIN_4
+#define NOKIA5110_SCLK_PIN      GPIO_PIN_5
+#define NOKIA5110_MISO_PIN      GPIO_PIN_6
+#define NOKIA5110_MOSI_PIN      GPIO_PIN_7
 
 static SPI_HandleTypeDef spi_handle = { 0 };
 
@@ -168,18 +174,23 @@ static void nokia5110_delay_ms(uint32_t millis);
  *      - PORTA4: Chip Select (activeted with 0)
  */
 void nokia5110_setup(void) {
+    GPIO_InitTypeDef gpio_init = { 0 };
     uint8_t buffer[4] = { 0 };
 
     __HAL_RCC_SPI1_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
 
-    // PORTA5 = SCLK1
-    gpio_setup(GPIO_PORTA, 5, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_AF_PUSH_PULL);
-    // PORTA6 = MISO1
-    gpio_setup(GPIO_PORTA, 6, GPIO_MODE_INPUT, GPIO_CFG_IN_FLOAT);
-    // PORTA7 = MOSI1
-    gpio_setup(GPIO_PORTA, 7, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_AF_PUSH_PULL);
+    gpio_init.Pin = NOKIA5110_SCLK_PIN | NOKIA5110_MOSI_PIN;
+    gpio_init.Mode = GPIO_MODE_AF_PP;
+    gpio_init.Pull = GPIO_NOPULL;
+    gpio_init.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(NOKIA5110_GPIO_PORT, &gpio_init);
 
-    spi_handle.Instance = SPI1;
+    gpio_init.Pin = NOKIA5110_MISO_PIN;
+    gpio_init.Mode = GPIO_MODE_AF_INPUT;
+    HAL_GPIO_Init(NOKIA5110_GPIO_PORT, &gpio_init);
+
+    spi_handle.Instance = NOKIA5110_SPI_INSTANCE;
     spi_handle.Init.Mode = SPI_MODE_MASTER;
     spi_handle.Init.Direction = SPI_DIRECTION_2LINES;
     spi_handle.Init.DataSize = SPI_DATASIZE_8BIT;
@@ -192,28 +203,32 @@ void nokia5110_setup(void) {
     spi_handle.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     HAL_SPI_Init(&spi_handle);
 
-    gpio_setup(GPIO_PORTA, 0, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // DC
-    gpio_setup(GPIO_PORTA, 1, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // RST
-    gpio_setup(GPIO_PORTA, 4, GPIO_MODE_OUTPUT_50, GPIO_CFG_OUT_PUSH_PULL); // CS
+    gpio_init.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4;
+    gpio_init.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio_init.Pull = GPIO_NOPULL;
+    gpio_init.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(NOKIA5110_GPIO_PORT, &gpio_init);
 
-    gpio_clr(GPIOA, 0); // Clear DC
-    gpio_set(GPIOA, 1); // Set RST
-    gpio_set(GPIOA, 4); // Set Chip Select
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_DC_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_RST_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_SET);
 
     // Reset Pulse
-    gpio_clr(GPIOA, 1); // Clr RST
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_RST_PIN, GPIO_PIN_RESET);
     nokia5110_delay_ms(10);
-    gpio_set(GPIOA, 1); // Set RST
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_RST_PIN, GPIO_PIN_SET);
 
     // LCD setup
-    gpio_clr(GPIOA, 0); // DC = 0 --> Command
+    // DC = 0 --> Command
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_DC_PIN, GPIO_PIN_RESET);
     buffer[0] = 0x21; // Extended instruction set
     buffer[1] = 0x90; // Sets contrast
     buffer[2] = 0x20; // Basic instruction set
     buffer[3] = 0x0C; // Normal mode
-    gpio_clr(GPIOA, 4); // Clear CS
+
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_RESET);
     HAL_SPI_Transmit(&spi_handle, buffer, 4, 100);
-    gpio_set(GPIOA, 4); // Set CS
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_SET);
 
     nokia5110_clear_screen();
     nokia5110_move_cursor(0, 0);
@@ -236,13 +251,15 @@ void nokia5110_move_cursor(uint8_t x, uint8_t y) {
     // Updates display position to copy the sent chars on screen buffer
     display_pos = x + y * NOKIA5110_MAX_COL_NR;
 
-    gpio_clr(GPIOA, 0); // DC = 0 --> Command
+    // DC = 0 --> Command
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_DC_PIN, GPIO_PIN_RESET);
     buffer[0] = 0x20;
     buffer[1] = 0x40 | y; // Line
     buffer[2] = 0x80 | x; // Collumn
-    gpio_clr(GPIOA, 4); // Clear CS
+
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_RESET);
     HAL_SPI_Transmit(&spi_handle, buffer, 3, 100);
-    gpio_set(GPIOA, 4); // Set CS
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_SET);
 }
 
 /**
@@ -256,13 +273,15 @@ void nokia5110_clear_screen(void) {
     uint8_t buffer = 0;
 
     // Limpa a tela
-    gpio_set(GPIOA, 0); // DC = 1 --> Data
-    gpio_clr(GPIOA, 4); // Clear CS
+    // DC = 1 --> Data
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_DC_PIN, GPIO_PIN_SET);
+
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_RESET);
     for (i = 0; i < NOKIA5110_BYTES_NR; i++) {
         buffer = 0;
         HAL_SPI_Transmit(&spi_handle, &buffer, 1, 100);
     }
-    gpio_set(GPIOA, 4); // Set CS
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_SET);
 }
 
 /**
@@ -280,14 +299,15 @@ void nokia5110_char(char character) {
     uint8_t buffer[NOKIA5110_COL_PER_CHAR + 1] = { 0 };
     uint8_t i = 0;
 
-    gpio_set(GPIOA, 0); // DC = 1 --> Data
+    // DC = 1 --> Data
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_DC_PIN, GPIO_PIN_SET);
     for (i = 0; i < NOKIA5110_COL_PER_CHAR; i++) {
         buffer[i] = characters[character - 0x20][i];
         screen_buffer[display_pos++] = buffer[i];
     }
-    gpio_clr(GPIOA, 4); // Clear CS
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_RESET);
     HAL_SPI_Transmit(&spi_handle, buffer, NOKIA5110_COL_PER_CHAR + 1, 100);
-    gpio_set(GPIOA, 4); // Set CS
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_SET);
 
     // Keeps count of the added blank collumn
     screen_buffer[display_pos++] = 0;
@@ -344,13 +364,15 @@ void nokia5110_update_screen(void) {
 
     nokia5110_move_cursor(0, 0);
     
-    gpio_set(GPIOA, 0); // DC = 1 --> Data
-    gpio_clr(GPIOA, 4); // Clear CS
+    // DC = 1 --> Data
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_DC_PIN, GPIO_PIN_SET);
+
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_RESET);
     for (i = 0; i < NOKIA5110_BYTES_NR; i++) {
         buffer = screen_buffer[i];
         HAL_SPI_Transmit(&spi_handle, &buffer, 1, 100);
     }
-    gpio_set(GPIOA, 4); // Set CS
+    HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_SET);
 }
 
 /**

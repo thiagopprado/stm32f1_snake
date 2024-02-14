@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "gpio.h"
 #include "nokia5110.h"
 #include "snake.h"
 
