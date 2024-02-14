@@ -393,19 +393,13 @@ void nokia5110_string_at(char* string, uint8_t x, uint8_t y) {
  * @brief Writes the screen_buffer to the display.
  */
 void nokia5110_update_screen(void) {
-    uint16_t i = 0;
-    uint8_t buffer = 0;
-
     nokia5110_move_cursor(0, 0);
     
     // DC = 1 --> Data
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_DC_PIN, GPIO_PIN_SET);
 
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_RESET);
-    for (i = 0; i < NOKIA5110_BYTES_NR; i++) {
-        buffer = screen_buffer[i];
-        HAL_SPI_Transmit(&spi_handle, &buffer, 1, NOKIA5110_SPI_TIMEOUT);
-    }
+    HAL_SPI_Transmit(&spi_handle, screen_buffer, NOKIA5110_BYTES_NR, NOKIA5110_SPI_TIMEOUT);
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_SET);
 }
 
