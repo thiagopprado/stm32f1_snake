@@ -303,16 +303,14 @@ void nokia5110_move_cursor(uint8_t x, uint8_t y) {
  * @note Doesn't write to the screen_buffer.
  */
 void nokia5110_clear_screen(void) {
-    uint16_t i = 0;
-    uint8_t buffer = 0;
+    nokia5110_move_cursor(0, 0);
 
-    // Limpa a tela
     // DC = 1 --> Data
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_DC_PIN, GPIO_PIN_SET);
 
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_RESET);
-    for (i = 0; i < NOKIA5110_BYTES_NR; i++) {
-        buffer = 0;
+    for (uint16_t i = 0; i < NOKIA5110_BYTES_NR; i++) {
+        uint8_t buffer = 0;
         HAL_SPI_Transmit(&spi_handle, &buffer, 1, NOKIA5110_SPI_TIMEOUT);
     }
     HAL_GPIO_WritePin(NOKIA5110_GPIO_PORT, NOKIA5110_CS_PIN, GPIO_PIN_SET);
