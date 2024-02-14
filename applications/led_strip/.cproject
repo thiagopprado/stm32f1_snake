@@ -52,8 +52,8 @@
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/timer"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/led_ws2812"/>
-									<listOptionValue builtIn="false" value="../../../modules/buzzer"/>
-									<listOptionValue builtIn="false" value="../../../modules/infrared"/>
+									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_libs/buzzer"/>
+									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_libs/infrared"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.129192912" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -114,6 +114,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
 						<entry excluding="spi|nokia5110" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers"/>
 						<entry excluding="spi|nokia5110" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="external_libs/stm32f1_bm_drivers"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="external_libs/stm32f1_libs"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="modules"/>
 					</sourceEntries>
 				</configuration>
@@ -164,8 +165,8 @@
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/gpio"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/timer"/>
 									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_bm_drivers/led_ws2812"/>
-									<listOptionValue builtIn="false" value="../../../modules/buzzer"/>
-									<listOptionValue builtIn="false" value="../../../modules/infrared"/>
+									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_libs/buzzer"/>
+									<listOptionValue builtIn="false" value="../../../external_libs/stm32f1_libs/infrared"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.598422548" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -198,6 +199,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
 						<entry excluding="spi|nokia5110" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="drivers"/>
 						<entry excluding="nokia5110|spi" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="external_libs/stm32f1_bm_drivers"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="external_libs/stm32f1_libs"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="modules"/>
 					</sourceEntries>
 				</configuration>
