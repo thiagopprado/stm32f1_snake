@@ -67,6 +67,5 @@ typedef struct {
 
 void snake_init(void);
 void snake_update(void);
-void snake_kbd_debounce(void);
 
 #endif /* SNAKE_H */

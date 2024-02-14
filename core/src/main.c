@@ -52,19 +52,12 @@ static void clock_config(void)
  * @brief Main function.
  */
 int main(void) {
-    uint32_t game_update_timeshot = 0;
-
     HAL_Init();
     clock_config();
 
     snake_init();
 
     while(true) {
-        snake_kbd_debounce();
-
-        if (HAL_GetTick() - game_update_timeshot >= 100) {
-            game_update_timeshot = HAL_GetTick();
-            snake_update();
-        }
+        snake_update();
     }
 }

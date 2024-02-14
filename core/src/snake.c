@@ -67,6 +67,7 @@ static snake_collision_t snake_check_collision(snake_pos_t position);
 static void snake_draw_part(snake_pos_t part_coord);
 static void snake_erase_part(snake_pos_t part_coord);
 static void snake_draw_food(void);
+static void snake_kbd_debounce(void);
 
 /* Private function implementation--------------------------------------------*/
 /**
@@ -208,6 +209,45 @@ static void snake_erase_part(snake_pos_t part_coord) {
     }
 }
 
+/**
+ * @ingroup snake
+ * @brief Reads the keyboard and debounces the keys.
+ *
+ * Only updates the key_pressed varible after the keys' state
+ * keeps stable for 10 cycles.
+ */
+static void snake_kbd_debounce(void) {
+    static snake_key_t previous_key = SNAKE_KEY_NONE;
+    static uint32_t debounce_timeshot = 0;
+    snake_key_t current_key = SNAKE_KEY_NONE;
+
+    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_RIGHT_PIN) == GPIO_PIN_RESET) {
+        current_key = SNAKE_KEY_RIGHT;
+    }
+    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_DOWN_PIN) == GPIO_PIN_RESET) {
+        current_key = SNAKE_KEY_DOWN;
+    }
+    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_LEFT_PIN) == GPIO_PIN_RESET) {
+        current_key = SNAKE_KEY_LEFT;
+    }
+    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_UP_PIN) == GPIO_PIN_RESET) {
+        current_key = SNAKE_KEY_UP;
+    }
+
+    if (previous_key != current_key) {
+        previous_key = current_key;
+        debounce_timeshot = HAL_GetTick();
+
+    } else if (HAL_GetTick() - debounce_timeshot >= SNAKE_DEBOUNCE_TIME_MS) {
+        /** Same key pressed for 10 ms, update the key pressed only if it's
+         *  different than none, to let the update function clear the key pressed.
+         */
+        if (current_key != SNAKE_KEY_NONE) {
+            key_pressed = current_key;
+        }
+    }
+}
+
 /* Public functions ----------------------------------------------------------*/
 /**
  * @ingroup snake
@@ -286,6 +326,16 @@ void snake_init(void) {
  * to actually update the screen.
  */
 void snake_update(void) {
+    static uint32_t update_timeshot = 0;
+
+    snake_kbd_debounce();
+
+    if (HAL_GetTick() - update_timeshot < 100) {
+        return;
+    }
+
+    update_timeshot = HAL_GetTick();
+
     uint16_t tail = head + size - 1;
     uint8_t new_head = head - 1;
 
@@ -400,43 +450,4 @@ void snake_update(void) {
     }
 
     nokia5110_update_screen();
-}
-
-/**
- * @ingroup snake
- * @brief Reads the keyboard and debounces the keys.
- *
- * Only updates the key_pressed varible after the keys' state
- * keeps stable for 10 cycles.
- */
-void snake_kbd_debounce(void) {
-    static snake_key_t previous_key = SNAKE_KEY_NONE;
-    static uint32_t debounce_timeshot = 0;
-    snake_key_t current_key = SNAKE_KEY_NONE;
-
-    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_RIGHT_PIN) == GPIO_PIN_RESET) {
-        current_key = SNAKE_KEY_RIGHT;
-    }
-    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_DOWN_PIN) == GPIO_PIN_RESET) {
-        current_key = SNAKE_KEY_DOWN;
-    }
-    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_LEFT_PIN) == GPIO_PIN_RESET) {
-        current_key = SNAKE_KEY_LEFT;
-    }
-    if (HAL_GPIO_ReadPin(SNAKE_KEYBOARD_PORT, SNAKE_KEYBOARD_UP_PIN) == GPIO_PIN_RESET) {
-        current_key = SNAKE_KEY_UP;
-    }
-
-    if (previous_key != current_key) {
-        previous_key = current_key;
-        debounce_timeshot = HAL_GetTick();
-
-    } else if (HAL_GetTick() - debounce_timeshot >= SNAKE_DEBOUNCE_TIME_MS) {
-        /** Same key pressed for 10 ms, update the key pressed only if it's
-         *  different than none, to let the update function clear the key pressed.
-         */
-        if (current_key != SNAKE_KEY_NONE) {
-            key_pressed = current_key;
-        }
-    }
 }
