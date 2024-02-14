@@ -16,14 +16,16 @@
 /* Private defines -----------------------------------------------------------*/
 #define NOKIA5110_COL_PER_CHAR  5
 
-#define NOKIA5110_SPI_INSTANCE  SPI1
-#define NOKIA5110_GPIO_PORT     GPIOA
-#define NOKIA5110_DC_PIN        GPIO_PIN_0
-#define NOKIA5110_RST_PIN       GPIO_PIN_1
-#define NOKIA5110_CS_PIN        GPIO_PIN_4
-#define NOKIA5110_SCLK_PIN      GPIO_PIN_5
-#define NOKIA5110_MISO_PIN      GPIO_PIN_6
-#define NOKIA5110_MOSI_PIN      GPIO_PIN_7
+#define NOKIA5110_SPI_INSTANCE      SPI1
+#define NOKIA5110_SPI_CLOCK_EN()    __HAL_RCC_SPI1_CLK_ENABLE()
+#define NOKIA5110_GPIO_PORT         GPIOA
+#define NOKIA5110_GPIO_CLOCK_EN()   __HAL_RCC_GPIOA_CLK_ENABLE()
+#define NOKIA5110_DC_PIN            GPIO_PIN_0
+#define NOKIA5110_RST_PIN           GPIO_PIN_1
+#define NOKIA5110_CS_PIN            GPIO_PIN_4
+#define NOKIA5110_SCLK_PIN          GPIO_PIN_5
+#define NOKIA5110_MISO_PIN          GPIO_PIN_6
+#define NOKIA5110_MOSI_PIN          GPIO_PIN_7
 
 #define NOKIA5110_SPI_TIMEOUT       50
 #define NOKIA5110_RESET_PULSE_MS    10
@@ -199,17 +201,12 @@ static uint8_t screen_buffer[NOKIA5110_BYTES_NR] = {
 /**
  * @ingroup nokia5110
  * @brief Sets up the Nokia 5110 display.
- *
- * Asides the SPI1 pins, the other control pins are connected to:
- *      - PORTA0: Data/Command (1/0)
- *      - PORTA1: Reset (activeted with 0)
- *      - PORTA4: Chip Select (activeted with 0)
  */
 void nokia5110_setup(void) {
     GPIO_InitTypeDef gpio_init = { 0 };
 
-    __HAL_RCC_SPI1_CLK_ENABLE();
-    __HAL_RCC_GPIOA_CLK_ENABLE();
+    NOKIA5110_SPI_CLOCK_EN();
+    NOKIA5110_GPIO_CLOCK_EN();
 
     gpio_init.Pin = NOKIA5110_SCLK_PIN | NOKIA5110_MOSI_PIN;
     gpio_init.Mode = GPIO_MODE_AF_PP;

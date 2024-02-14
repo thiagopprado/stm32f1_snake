@@ -99,6 +99,7 @@ typedef struct {
 #define SNAKE_DEBOUNCE_TIME_MS  10
 
 #define SNAKE_KEYBOARD_PORT         GPIOB
+#define SNAKE_KEYBOARD_CLOCK_EN()   __HAL_RCC_GPIOB_CLK_ENABLE()
 #define SNAKE_KEYBOARD_RIGHT_PIN    GPIO_PIN_12
 #define SNAKE_KEYBOARD_DOWN_PIN     GPIO_PIN_13
 #define SNAKE_KEYBOARD_LEFT_PIN     GPIO_PIN_14
@@ -312,7 +313,7 @@ static void snake_kbd_debounce(void) {
 void snake_init(void) {
     GPIO_InitTypeDef gpio_init = { 0 };
 
-    __HAL_RCC_GPIOB_CLK_ENABLE();
+    SNAKE_KEYBOARD_CLOCK_EN();
 
     // PB12 = Right | PB13 = Down | PB14 = Left | PB15 = Up
     gpio_init.Pin = SNAKE_KEYBOARD_RIGHT_PIN | SNAKE_KEYBOARD_DOWN_PIN | SNAKE_KEYBOARD_LEFT_PIN | SNAKE_KEYBOARD_UP_PIN;
