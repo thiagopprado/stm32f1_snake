@@ -11,7 +11,10 @@
 #include "nokia5110.h"
 #include "gpio.h"
 
+#include "stm32f1xx_hal.h"
+
 #include <stdlib.h>
+#include <stdint.h>
 
 // Define as 1 to draw the snake with 3 pixels width
 #define SNAKE_THINNER   0
@@ -37,7 +40,7 @@
 #define SNAKE_X_0       2
 #define SNAKE_Y_0       2
 
-#define SNAKE_DEBOUNCE_CNT  10
+#define SNAKE_DEBOUNCE_TIME_MS  10
 
 // Snake and food coordinates
 snake_pos_t snake[SNAKE_MAX_SIZE] = { {2, 0}, {1, 0}, {0, 0}, };
@@ -253,7 +256,7 @@ void snake_update(void) {
  */
 void snake_kbd_debounce(void) {
     static snake_key_t previous_key = SNAKE_KEY_NONE;
-    static uint8_t debounce_counter = SNAKE_DEBOUNCE_CNT;
+    static uint32_t debounce_timeshot = 0;
     snake_key_t current_key = SNAKE_KEY_NONE;
 
     if (gpio_read(GPIO_PORTB, 12) == GPIO_STATE_LOW) {
@@ -269,20 +272,17 @@ void snake_kbd_debounce(void) {
         current_key = SNAKE_KEY_UP;
     }
 
-    if (previous_key == current_key) {
-        debounce_counter--;
-        if (debounce_counter == 0) {
-            /** Same key pressed for 10 cycles, update the key pressed only if it's
-             *  different than none, to let the update function clear the key pressed.
-             */
-            if (current_key != SNAKE_KEY_NONE) {
-                key_pressed = current_key;
-            }
-            debounce_counter = SNAKE_DEBOUNCE_CNT;
-        }
-    } else {
+    if (previous_key != current_key) {
         previous_key = current_key;
-        debounce_counter = SNAKE_DEBOUNCE_CNT;
+        debounce_timeshot = HAL_GetTick();
+
+    } else if (HAL_GetTick() - debounce_timeshot >= SNAKE_DEBOUNCE_TIME_MS) {
+        /** Same key pressed for 10 ms, update the key pressed only if it's
+         *  different than none, to let the update function clear the key pressed.
+         */
+        if (current_key != SNAKE_KEY_NONE) {
+            key_pressed = current_key;
+        }
     }
 }
 

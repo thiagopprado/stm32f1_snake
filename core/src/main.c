@@ -8,7 +8,6 @@
 
 #include "gpio.h"
 #include "spi.h"
-#include "timer.h"
 #include "nokia5110.h"
 #include "snake.h"
 
@@ -19,19 +18,11 @@
 /* Private defines -----------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-static volatile bool timer_wait_flag = true;
 
 /* Private function prototypes -----------------------------------------------*/
-static void timer_wait_callback(void);
 static void clock_config(void);
 
 /* Private function implementation--------------------------------------------*/
-/**
- * @brief Timer callback.
- */
-static void timer_wait_callback(void) {
-    timer_wait_flag = false;
-}
 
 /**
  * @brief MCU clock configuration.
@@ -65,7 +56,7 @@ static void clock_config(void)
  * @brief Main function.
  */
 int main(void) {
-    uint8_t i = 0;
+    uint32_t game_update_timeshot = 0;
 
     HAL_Init();
     clock_config();
@@ -75,25 +66,14 @@ int main(void) {
     nokia5110_clear_buffer();
     nokia5110_update_screen();
 
-    // Timer period = 1ms
-    timer_setup(TIMER_1, 71, 999);
-    timer_attach_callback(TIMER_1, timer_wait_callback);
-
     snake_init();
     nokia5110_update_screen();
 
     for(;;) {
-        // Wait for timer ISR
-        while (timer_wait_flag == true);
-        timer_wait_flag = true;
-
         snake_kbd_debounce();
 
-        i++;
-        if (i >= 100) {
-            i = 0;
-
-            // Update game each ~100ms
+        if (HAL_GetTick() - game_update_timeshot >= 100) {
+            game_update_timeshot = HAL_GetTick();
             snake_update();
             nokia5110_update_screen();
         }
